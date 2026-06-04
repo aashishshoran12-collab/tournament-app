@@ -1,0 +1,4092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Pro - Fast & Live</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        /* --- CSS RESETS AND BASE STYLES --- */
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
+        body { 
+            font-family: 'Arial', sans-serif; 
+            background: #f0f2f5; 
+            color: #333; 
+            display: flex; 
+            justify-content: center; 
+            min-height: 100vh; 
+        }
+        
+        .screen { 
+            width: 100%; 
+            max-width: 400px; 
+            background: #f0f2f5; 
+            position: relative; 
+            padding-bottom: 70px; 
+            overflow-x: hidden; 
+        }
+        
+        .ff-title { 
+            font-size: 42px; 
+            font-weight: 900; 
+            font-style: italic; 
+            background: linear-gradient(45deg, #ff8a00, #f1c40f); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            margin-bottom: 5px; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1); 
+            text-align: center; 
+        }
+
+        .auth-box { 
+            padding: 40px 20px; 
+            text-align: center; 
+            background: #ffffff; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        }
+        
+        .auth-tabs { 
+            display: flex; 
+            justify-content: center; 
+            gap: 20px; 
+            margin: 30px 0; 
+            border-bottom: 2px solid #eee; 
+            padding-bottom: 10px; 
+        }
+        
+        .auth-tabs span { 
+            cursor: pointer; 
+            color: #888; 
+            font-size: 15px; 
+            font-weight: bold; 
+            transition: 0.2s; 
+        }
+        
+        .auth-tabs .active { 
+            color: #000; 
+            border-bottom: 3px solid #f1c40f; 
+            padding-bottom: 8px; 
+        }
+        
+        input, textarea { 
+            width: 100%; 
+            padding: 14px; 
+            margin-bottom: 15px; 
+            background: #f9f9f9; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            color: #333; 
+            outline: none; 
+            font-size: 16px; 
+            transition: 0.3s; 
+            font-family: inherit;
+        }
+        
+        input:focus, textarea:focus { 
+            border-color: #f1c40f; 
+            box-shadow: 0 0 5px rgba(241, 196, 15, 0.3); 
+        }
+        
+        .primary-btn { 
+            width: 100%; 
+            padding: 15px; 
+            background: #f1c40f; 
+            color: #000; 
+            font-weight: bold; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin-top: 10px; 
+            font-size: 16px; 
+            box-shadow: 0 4px 10px rgba(241, 196, 15, 0.3); 
+            transition: 0.1s; 
+        }
+        
+        .primary-btn:active { 
+            transform: scale(0.96); 
+        }
+        
+        .secondary-btn { 
+            background: #3498db; 
+            color: white; 
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); 
+        }
+        
+        .success-btn { 
+            background: #2ecc71; 
+            color: white; 
+            margin-top: 5px; 
+            padding: 10px; 
+            width: 48%; 
+            display: inline-block; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            transition: 0.1s;
+        }
+        
+        .success-btn:active { 
+            transform: scale(0.96); 
+        }
+        
+        .danger-btn { 
+            background: #e74c3c; 
+            color: white; 
+            margin-top: 5px; 
+            padding: 10px; 
+            width: 48%; 
+            display: inline-block; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            transition: 0.1s;
+        }
+        
+        .danger-btn:active { 
+            transform: scale(0.96); 
+        }
+        
+        header { 
+            text-align: center; 
+            padding: 15px 20px; 
+            background: #ffffff; 
+            border-bottom: 1px solid #eee; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        
+        .wallet-badge { 
+            background: #e8f8f5; 
+            color: #1abc9c; 
+            padding: 8px 12px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            border: 1px solid #1abc9c; 
+            font-size: 14px; 
+            cursor: pointer; 
+            transition: 0.2s;
+        }
+        
+        .wallet-badge:active { 
+            transform: scale(0.95); 
+        }
+        
+        .notice-board { 
+            background: #fff3cd; 
+            color: #d35400; 
+            padding: 10px 0; 
+            font-size: 14px; 
+            font-weight: bold; 
+            border-bottom: 1px solid #f1c40f; 
+            overflow: hidden; 
+            white-space: nowrap; 
+            width: 100%; 
+            position: relative; 
+        }
+        
+        .marquee-text { 
+            display: inline-block; 
+            padding-left: 100%; 
+            animation: scroll-left 15s linear infinite; 
+        }
+        
+        @keyframes scroll-left { 
+            0% { transform: translateX(0); } 
+            100% { transform: translateX(-100%); } 
+        }
+
+        .grid-container { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            padding: 20px; 
+        }
+        
+        .card { 
+            background: #ffffff; 
+            padding: 25px 10px; 
+            border-radius: 12px; 
+            text-align: center; 
+            cursor: pointer; 
+            border: 1px solid #eee; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+            transition: 0.2s; 
+            position: relative; 
+            overflow: hidden; 
+        }
+        
+        .card:active { 
+            transform: scale(0.96); 
+        }
+        
+        .card .icon { 
+            font-size: 35px; 
+            margin-bottom: 8px; 
+        }
+        
+        .card span { 
+            font-weight: bold; 
+            color: #333; 
+            display: block; 
+            font-size: 14px;
+        }
+        
+        .card .sub-text { 
+            font-size: 11px; 
+            color: #888; 
+            margin-top: 5px; 
+            font-weight: normal; 
+            line-height: 1.4;
+        }
+        
+        .card .fee-badge { 
+            position: absolute; 
+            top: -10px; 
+            right: -10px; 
+            background: #e74c3c; 
+            color: white; 
+            font-size: 10px; 
+            font-weight: bold; 
+            padding: 4px 8px; 
+            border-radius: 20px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+            z-index: 5;
+        }
+        
+        .card.disabled { 
+            opacity: 0.6; 
+            filter: grayscale(100%); 
+            pointer-events: none; 
+        }
+        
+        .card.disabled .avail-tag { 
+            display: block; 
+        }
+        
+        .avail-tag { 
+            display: none; 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%) rotate(-20deg); 
+            background: rgba(0,0,0,0.8); 
+            color: white; 
+            padding: 5px 10px; 
+            font-weight: bold; 
+            border-radius: 5px; 
+            font-size: 12px; 
+            z-index: 10; 
+            width: 100%; 
+            text-align:center; 
+            letter-spacing: 1px;
+        }
+
+        .qr-box { 
+            background: white; 
+            padding: 10px; 
+            border-radius: 10px; 
+            display: inline-block; 
+            margin: 15px 0; 
+            min-width: 150px; 
+            min-height: 150px; 
+            border: 1px solid #eee; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .qr-box img { 
+            width: 150px; 
+            height: 150px; 
+            object-fit: contain; 
+        }
+        
+        .upload-area { 
+            border: 2px dashed #bbb; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 10px; 
+            position: relative; 
+            background: #fdfdfd; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            transition: 0.2s;
+        }
+        
+        .upload-area:active { 
+            background: #f1f1f1; 
+        }
+        
+        .upload-area input { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            opacity: 0; 
+            cursor: pointer; 
+        }
+
+        .box-section { 
+            background: #ffffff; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-top: 20px; 
+            border: 1px solid #eee; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+        }
+        
+        .room-details { 
+            background: #e8f8f5; 
+            color: #1abc9c; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-top: 15px; 
+            font-weight: bold; 
+            display: none; 
+            border: 1px solid #1abc9c; 
+            text-align: left; 
+        }
+        
+        .coming-soon { 
+            background: #fef5e7; 
+            color: #e67e22; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-top: 15px; 
+            font-weight: bold; 
+            display: none; 
+            border: 1px solid #f39c12; 
+        }
+
+        .view-section { 
+            padding: 20px; 
+            animation: fadeIn 0.3s ease-in-out; 
+        }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(5px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        .history-item, .admin-card { 
+            background: #ffffff; 
+            margin-bottom: 15px; 
+            padding: 15px; 
+            border-radius: 10px; 
+            border: 1px solid #eee; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+        }
+        
+        .wallet-tabs { 
+            display: flex; 
+            justify-content: space-around; 
+            margin-bottom: 15px; 
+            border-bottom: 2px solid #eee; 
+            padding-bottom: 10px; 
+        }
+        
+        .wallet-tabs span { 
+            font-weight: bold; 
+            color: #888; 
+            cursor: pointer; 
+            transition: 0.2s;
+        }
+        
+        .wallet-tabs .active { 
+            color: #1abc9c; 
+            border-bottom: 3px solid #1abc9c; 
+            padding-bottom: 8px; 
+        }
+
+        .bottom-nav { 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            max-width: 400px; 
+            background: #ffffff; 
+            display: flex; 
+            justify-content: space-around; 
+            padding: 10px 0; 
+            border-top-left-radius: 20px; 
+            border-top-right-radius: 20px; 
+            z-index: 100; 
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.05); 
+            border-top: 1px solid #eee; 
+        }
+        
+        .nav-item { 
+            background: none; 
+            border: none; 
+            font-size: 20px; 
+            cursor: pointer; 
+            color: #555; 
+            transition: 0.2s; 
+            padding: 5px; 
+            flex: 1; 
+        }
+        
+        .nav-item:active { 
+            transform: scale(0.8); 
+            color: #f1c40f; 
+        }
+        
+        .popup-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.7); 
+            z-index: 1000; 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            backdrop-filter: blur(3px); 
+        }
+        
+        .popup-box { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            width: 90%; 
+            max-width: 320px; 
+            text-align: center; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            border-top: 5px solid #f1c40f; 
+        }
+        
+        @keyframes popIn { 
+            0% { transform: scale(0.8); opacity: 0; } 
+            100% { transform: scale(1); opacity: 1; } 
+        }
+
+        .loader { 
+            display: none; 
+            text-align: center; 
+            color: #f1c40f; 
+            font-weight: bold; 
+            margin-top: 10px; 
+        }
+        
+        .two-col { 
+            display: flex; 
+            gap: 10px; 
+        }
+        
+        .two-col input { 
+            width: 50%; 
+        }
+        
+        .rules-content { 
+            background: #fdfdfd; 
+            padding: 20px; 
+            border-radius: 12px; 
+            border: 1px solid #eee; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            margin-bottom: 30px; 
+            white-space: pre-wrap; 
+            font-size: 15px; 
+            color: #333; 
+            line-height: 1.6; 
+            text-align: left;
+        }
+
+        .video-container { 
+            position: relative; 
+            padding-bottom: 56.25%; 
+            height: 0; 
+            overflow: hidden; 
+            max-width: 100%; 
+            background: #000; 
+            border-radius: 12px; 
+            margin-top: 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .video-container iframe { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+        }
+        
+        .bonus-card { 
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); 
+            color: #fff; 
+            padding: 15px; 
+            border-radius: 12px; 
+            text-align: center; 
+            font-weight: bold; 
+            margin-bottom: 15px; 
+            cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.4); 
+            display: none; 
+            font-size: 16px; 
+            border: 2px solid #fff;
+        }
+        
+        .bonus-card:active { 
+            transform: scale(0.96); 
+        }
+        
+        .vip-banner { 
+            background: linear-gradient(135deg, #8e44ad 0%, #3498db 100%); 
+            color: #fff; 
+            padding: 15px; 
+            border-radius: 12px; 
+            text-align: center; 
+            font-weight: bold; 
+            margin-bottom: 15px; 
+            cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4); 
+            display: none; 
+            font-size: 14px; 
+            border: 2px solid #fff; 
+            animation: pulseVIP 2s infinite;
+        }
+        
+        .vip-banner:active { 
+            transform: scale(0.96); 
+        }
+        
+        @keyframes pulseVIP { 
+            0% { box-shadow: 0 0 0 0 rgba(142, 68, 173, 0.4); } 
+            70% { box-shadow: 0 0 0 10px rgba(142, 68, 173, 0); } 
+            100% { box-shadow: 0 0 0 0 rgba(142, 68, 173, 0); } 
+        }
+
+        .profile-avatar { 
+            width: 80px; 
+            height: 80px; 
+            background: #f1c40f; 
+            color: #000; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 35px; 
+            margin: 0 auto 10px auto; 
+            font-weight: bold; 
+            box-shadow: 0 4px 10px rgba(241, 196, 15, 0.3);
+        }
+        
+        .stat-box { 
+            text-align: center; 
+            flex: 1; 
+        }
+        
+        .stat-box p { 
+            font-size: 11px; 
+            color: #888; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            margin-bottom: 5px; 
+        }
+        
+        .stat-box h3 { 
+            margin: 0; 
+            font-size: 18px; 
+        }
+
+        .slider-container { 
+            width: 100%; 
+            position: relative; 
+            overflow: hidden; 
+            border-radius: 12px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            display: none; 
+            background: #fff;
+        }
+        
+        .slider-wrapper { 
+            display: flex; 
+            transition: transform 0.5s ease-in-out; 
+            width: 100%; 
+            align-items: center;
+        }
+        
+        .slide { 
+            min-width: 100%; 
+            height: 160px; 
+            object-fit: cover; 
+            border-radius: 12px; 
+            background: #eee; 
+        }
+        
+        .slider-dots { 
+            position: absolute; 
+            bottom: 10px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            display: flex; 
+            gap: 6px; 
+        }
+        
+        .dot { 
+            width: 8px; 
+            height: 8px; 
+            background: rgba(255,255,255,0.5); 
+            border-radius: 50%; 
+            transition: 0.3s; 
+            cursor: pointer; 
+        }
+        
+        .dot.active { 
+            background: #fff; 
+            width: 15px; 
+            border-radius: 4px; 
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        
+        .admin-banner-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: #f9f9f9; 
+            padding: 10px; 
+            border-radius: 8px; 
+            margin-bottom: 10px; 
+            border: 1px solid #ddd; 
+        }
+        
+        .admin-banner-item img { 
+            height: 50px; 
+            width: 100px; 
+            object-fit: cover; 
+            border-radius: 5px; 
+            background: #eee; 
+        }
+        
+        .ticket-box { 
+            background: #fdfdfd; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #eee; 
+            margin-bottom: 15px; 
+            text-align: left; 
+        }
+        
+        .ticket-msg { 
+            font-size: 14px; 
+            color: #333; 
+            margin-bottom: 10px; 
+            background: #f1f1f1; 
+            padding: 10px; 
+            border-radius: 6px; 
+        }
+
+        /* --- T-BADGE SHINING CSS --- */
+        .t-badge { 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: linear-gradient(135deg, #f1c40f, #e67e22); 
+            color: #fff; 
+            font-weight: 900; 
+            font-size: 10px; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            border: 1px solid #d35400; 
+            margin-left: 5px; 
+            position: relative; 
+            overflow: hidden; 
+            vertical-align: middle; 
+            box-shadow: 0 2px 5px rgba(241, 196, 15, 0.5); 
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.3); 
+            z-index: 1; 
+        }
+        
+        .t-badge::after { 
+            content: ''; 
+            position: absolute; 
+            top: 0; 
+            left: -150%; 
+            width: 150%; 
+            height: 100%; 
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 50%, rgba(255,255,255,0) 100%); 
+            transform: skewX(-25deg); 
+            animation: shineBadge 2.5s infinite ease-in-out; 
+            z-index: 2; 
+        }
+        
+        @keyframes shineBadge { 
+            0% { left: -150%; } 
+            30% { left: 150%; } 
+            100% { left: 150%; } 
+        }
+
+        /* --- WHITE CLEAN PAYMENT GATEWAY UI --- */
+        #paymentGatewayView { 
+            background: #ffffff; 
+            color: #333; 
+            min-height: 100vh; 
+            padding: 40px 20px; 
+            animation: fadeIn 0.3s ease-in-out; 
+        }
+        
+        .pg-card { 
+            background: #ffffff; 
+            border: 1px solid #eaeaea; 
+            border-radius: 20px; 
+            padding: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+            max-width: 360px; 
+            margin: 0 auto; 
+        }
+        
+        .pg-summary { 
+            background: #fdfdfd; 
+            padding: 15px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            border: 1px solid #f1f1f1; 
+        }
+        
+        .pg-summary-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 10px; 
+            font-size: 14px; 
+        }
+        
+        .pg-btn { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #e0e0e0; 
+            background: #ffffff; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            font-size: 14px; 
+            color: #333; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02); 
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-start; 
+            gap: 12px; 
+        }
+        
+        .pg-btn img { 
+            width: 30px; 
+            height: 30px; 
+            object-fit: contain; 
+        }
+        
+        .pg-btn:active { 
+            transform: scale(0.96); 
+            border-color: #3498db; 
+            background: #f4f9fd; 
+        }
+        
+        .pg-grid { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 12px; 
+        }
+
+        /* --- ROLE BADGES (OWNER VS ADMIN) --- */
+        .owner-badge { 
+            display: inline-block; 
+            background: #000000; 
+            color: #ffffff; 
+            font-size: 10px; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            margin-left: 5px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4); 
+            vertical-align: middle; 
+        }
+        
+        .admin-badge { 
+            display: inline-block; 
+            background: #3498db; 
+            color: #ffffff; 
+            font-size: 10px; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            margin-left: 5px; 
+            box-shadow: 0 2px 5px rgba(52,152,219,0.3); 
+            vertical-align: middle; 
+        }
+
+        /* --- 3D PUBLIC PROFILE GLASSMORPHISM --- */
+        .glass-overlay {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 5000; 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            perspective: 1000px; 
+            backdrop-filter: blur(5px);
+        }
+
+        .tilt-card {
+            width: 320px; 
+            background: rgba(30, 30, 30, 0.6); 
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-top: 1px solid rgba(255, 255, 255, 0.3); 
+            border-left: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px; 
+            padding: 30px 20px; 
+            text-align: center; 
+            color: white;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5); 
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out; 
+            position: relative; 
+            overflow: hidden;
+        }
+
+        /* Neon Glow Effect */
+        .tilt-card::before {
+            content: ''; 
+            position: absolute; 
+            top: -50%; 
+            left: -50%; 
+            width: 200%; 
+            height: 200%;
+            background: radial-gradient(circle, rgba(52, 152, 219, 0.1) 0%, transparent 70%); 
+            transform: translateZ(-1px); 
+            pointer-events: none;
+        }
+
+        .tilt-card img.pub-avatar {
+            width: 90px; 
+            height: 90px; 
+            border-radius: 50%; 
+            object-fit: cover;
+            border: 3px solid #3498db; 
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.6);
+            transform: translateZ(50px); 
+            margin-bottom: 15px; 
+            background: #222;
+        }
+
+        .tilt-card h2 { 
+            transform: translateZ(40px); 
+            font-size: 24px; 
+            margin-bottom: 5px; 
+            color: #fff; 
+            text-shadow: 0 0 10px rgba(255,255,255,0.5); 
+        }
+        
+        .tilt-card p.pub-uid { 
+            transform: translateZ(30px); 
+            font-size: 13px; 
+            color: #aaa; 
+            margin-bottom: 20px; 
+            letter-spacing: 1px; 
+        }
+
+        .pub-stats-grid { 
+            display: flex; 
+            justify-content: space-around; 
+            transform: translateZ(30px); 
+            margin-bottom: 25px; 
+        }
+        
+        .pub-stat-box { 
+            background: rgba(0, 0, 0, 0.4); 
+            padding: 10px; 
+            border-radius: 10px; 
+            width: 45%; 
+            border: 1px solid rgba(255,255,255,0.05); 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5); 
+        }
+        
+        .pub-stat-box p { 
+            font-size: 11px; 
+            color: #888; 
+            text-transform: uppercase; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+        }
+        
+        .pub-stat-box h3 { 
+            font-size: 18px; 
+            color: #f1c40f; 
+            margin: 0; 
+            text-shadow: 0 0 5px rgba(241, 196, 15, 0.4); 
+        }
+
+        .badge-3d {
+            display: inline-block; 
+            padding: 5px 15px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: bold; 
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #e67e22, #f39c12); 
+            color: #000;
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4); 
+            transform: translateZ(60px); 
+            margin-bottom: 15px;
+            animation: floatBadge 3s ease-in-out infinite; 
+            border: 1px solid #fff;
+        }
+
+        @keyframes floatBadge { 
+            0%, 100% { transform: translateZ(60px) translateY(0); } 
+            50% { transform: translateZ(60px) translateY(-5px); } 
+        }
+
+        .close-btn-3d {
+            background: transparent; 
+            color: #fff; 
+            border: 1px solid rgba(255,255,255,0.3); 
+            border-radius: 8px; 
+            padding: 10px 20px; 
+            font-weight: bold;
+            cursor: pointer; 
+            transform: translateZ(20px); 
+            transition: 0.2s; 
+            width: 100%;
+        }
+        
+        .close-btn-3d:active { 
+            background: rgba(255,255,255,0.1); 
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="updateOverlay" class="popup-overlay" style="z-index: 9999; background: rgba(0,0,0,0.9);">
+        <div class="popup-box" style="border-top: 5px solid #3498db;">
+            <div style="font-size: 50px; margin-bottom: 10px;">🚀</div>
+            <h2 style="color: #3498db; margin-bottom: 10px;">Update Available!</h2>
+            <p style="font-size: 14px; color: #555; margin-bottom: 20px; line-height: 1.5; font-weight: bold;">Naya aur behtar version aa gaya hai. Khelne ke liye app ko update karein!</p>
+            <div style="display: flex; justify-content: space-between; gap: 10px;">
+                <button class="primary-btn" style="margin: 0; width: 48%; background: #7f8c8d; color: white;" onclick="closeUpdatePopup()">LATER</button>
+                <button id="updateBtn" class="primary-btn" style="margin: 0; width: 48%; background: #3498db; color: white;">UPDATE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="roomPopupOverlay" class="popup-overlay">
+        <div class="popup-box">
+            <h2 style="color: #e74c3c; margin-bottom: 5px;">🔔 Room is Ready!</h2>
+            <p id="popupMapName" style="font-weight: bold; color: #555; margin-bottom: 15px; font-size: 14px;"></p>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; text-align: left; margin-bottom: 20px; border: 1px solid #eee;">
+                <p style="margin-bottom: 10px; font-size: 15px; color:#333;">Room ID: <strong id="popupRoomId" style="color:#d35400; font-size:18px;">--</strong></p>
+                <p style="font-size: 15px; color:#333;">Password: <strong id="popupRoomPass" style="color:#d35400; font-size:18px;">--</strong></p>
+            </div>
+            <button class="primary-btn" onclick="document.getElementById('roomPopupOverlay').style.display='none'">CLOSE</button>
+        </div>
+    </div>
+
+    <div id="flashAlertOverlay" class="popup-overlay">
+        <div class="popup-box" style="border-top: 5px solid #e74c3c;">
+            <div style="font-size: 40px; margin-bottom: 5px;">🚨</div>
+            <h2 style="color: #e74c3c; margin-bottom: 10px; font-size: 22px;">URGENT ALERT</h2>
+            <p id="flashAlertMessage" style="font-size: 15px; color: #333; margin: 15px 0; line-height: 1.5; font-weight: bold;"></p>
+            <button class="primary-btn" style="background: #e74c3c; color: white;" onclick="closeFlashAlert()">OK, UNDERSTOOD</button>
+        </div>
+    </div>
+
+    <div id="userActionConfirmOverlay" class="popup-overlay" style="z-index: 2000;">
+        <div id="userActionBox" class="popup-box" style="border-top: 5px solid #e74c3c;">
+            <h2 id="userActionTitle" style="color: #e74c3c; margin-bottom: 10px;">⚠️ WARNING!</h2>
+            <p id="userActionText" style="color: #555; font-size: 14px; margin-bottom: 20px;"></p>
+            <div style="display: flex; justify-content: space-between; gap: 10px;">
+                <button class="primary-btn" style="margin: 0; width: 48%; background: #7f8c8d; color: white;" onclick="closeUserActionPopup()">CANCEL</button>
+                <button id="userActionConfirmBtn" class="primary-btn" style="margin: 0; width: 48%; background: #e74c3c; color: white;" onclick="confirmUserAction()">✅ YES</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resetConfirmOverlay" class="popup-overlay" style="z-index: 2000;">
+        <div class="popup-box" style="border-top: 5px solid #e74c3c;">
+            <h2 style="color: #e74c3c; margin-bottom: 10px;">⚠️ Reset Map?</h2>
+            <p style="color: #555; font-size: 14px; margin-bottom: 20px;">Kya aap sach mein <strong id="resetMapNameText" style="color:#d35400;"></strong> match ko finish karna chahte hain? Saare players archive ho jayenge.</p>
+            <div style="display: flex; justify-content: space-between; gap: 10px;">
+                <button class="primary-btn" style="margin: 0; width: 48%; background: #7f8c8d; color: white;" onclick="closeResetPopup()">CANCEL</button>
+                <button class="primary-btn" style="margin: 0; width: 48%; background: #e74c3c; color: white;" onclick="confirmResetMapData()">✅ YES, FINISH</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="profileEditOverlay" class="popup-overlay" style="z-index: 2000;">
+        <div class="popup-box" style="border-top: 5px solid #3498db;">
+            <h2 style="color: #3498db; margin-bottom: 10px;">⚙️ Edit Profile</h2>
+            <div class="upload-area" style="padding: 10px; margin-bottom: 15px;">
+                <span id="avatarUploadText" style="font-size: 14px; font-weight: bold; color: #555;">📷 Upload Custom Avatar</span>
+                <input type="file" id="avatarUpload" accept="image/*" onchange="updateFileName('avatarUpload', 'avatarUploadText')">
+            </div>
+            <input type="text" id="editProfileName" placeholder="New Player Name">
+            <p id="vipNameMsg" style="font-size: 11px; color: #e74c3c; margin-top: -10px; margin-bottom: 15px; font-weight: bold; display: none;">👑 VIP Only Feature</p>
+            <div style="display: flex; justify-content: space-between; gap: 10px;">
+                <button class="primary-btn" style="margin: 0; width: 48%; background: #7f8c8d; color: white;" onclick="closeProfileEdit()">CANCEL</button>
+                <button class="primary-btn" style="margin: 0; width: 48%; background: #3498db; color: white;" onclick="saveProfileChanges()">SAVE</button>
+            </div>
+            <p id="profileLoader" class="loader" style="color:#3498db;">Saving... ⏳</p>
+        </div>
+    </div>
+
+    <div id="publicProfileOverlay" class="glass-overlay">
+        <div id="publicCard" class="tilt-card">
+            <div id="pubVipBadge" class="badge-3d" style="display:none;">👑 VIP PLAYER</div>
+            <div id="pubNormalBadge" class="badge-3d" style="background: linear-gradient(45deg, #7f8c8d, #bdc3c7);">🎮 CHALLENGER</div>
+            
+            <img id="pubAvatar" class="pub-avatar" src="https://via.placeholder.com/150/222222/FFFFFF?text=?" alt="DP">
+            
+            <h2 id="pubName">Player Name</h2>
+            <p class="pub-uid">UID: <span id="pubUidText" style="color:#3498db; font-weight:bold;">12345678</span></p>
+            
+            <div class="pub-stats-grid">
+                <div class="pub-stat-box">
+                    <p>Matches</p>
+                    <h3 id="pubMatches" style="color:#3498db;">0</h3>
+                </div>
+                <div class="pub-stat-box">
+                    <p>Total Won</p>
+                    <h3 id="pubWon" style="color:#2ecc71;">₹0</h3>
+                </div>
+            </div>
+            
+            <button class="close-btn-3d" onclick="closePublicProfile()">CLOSE</button>
+        </div>
+    </div>
+
+    <div id="authScreen" class="screen">
+        <div class="auth-box">
+            <h2 id="mainAppTitle" class="ff-title">FREE FIRE</h2>
+            <p style="color: #666; font-weight: bold;">Tournament App</p>
+            
+            <div class="auth-tabs">
+                <span id="tabLogin" class="active" onclick="switchAuthMode('login')">LOG IN</span>
+                <span id="tabSignup" onclick="switchAuthMode('signup')">SIGN UP</span>
+            </div>
+
+            <input type="text" id="playerName" placeholder="Player Name" style="display: none;">
+            <input type="text" id="playerUid" placeholder="Free Fire UID">
+            <input type="password" id="playerPass" placeholder="Password">
+            
+            <button id="authBtn" class="primary-btn" onclick="handleAuth()">LOG IN</button>
+            <p id="authLoader" class="loader">Processing... ⏳</p>
+        </div>
+    </div>
+
+    <div id="rulesScreen" class="screen" style="display: none; height: 100vh; flex-direction: column; justify-content: center; padding: 20px; box-sizing: border-box; background: #ffffff;">
+        <div style="text-align: center;">
+            <div style="font-size: 50px; margin-bottom: 5px;">📜</div>
+            <h2 style="color: #e74c3c; margin-bottom: 20px; text-transform: uppercase;">Rules & Guidelines</h2>
+        </div>
+        <div id="dynamicRulesContainer" class="rules-content">Loading rules...</div>
+        <div style="display: flex; justify-content: space-between; gap: 10px;">
+            <button class="danger-btn" style="width: 48%; padding: 15px; font-size: 15px; margin: 0; font-weight:bold;" onclick="acceptRules()">Don't Agree</button>
+            <button class="success-btn" style="width: 48%; padding: 15px; font-size: 15px; margin: 0; font-weight:bold;" onclick="acceptRules()">I Agree</button>
+        </div>
+    </div>
+
+    <div id="mainApp" class="screen" style="display: none;">
+        
+        <header style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 id="headerTitle" style="color: #333; margin: 0; flex: 1; text-align: left;">Dashboard</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="wallet-badge" onclick="switchView('walletView', 'Wallet')" style="margin: 0;">💰 ₹<span id="topBalance">0</span></div>
+            </div>
+        </header>
+
+        <div id="noticeBoard" class="notice-board" style="display:none;">
+            <div id="noticeText" class="marquee-text">Loading...</div>
+        </div>
+
+        <div id="dashboardView" class="view-section">
+            <div id="bannerSlider" class="slider-container">
+                <div class="slider-wrapper" id="sliderWrapper"></div>
+                <div class="slider-dots" id="sliderDots"></div>
+            </div>
+
+            <div id="vipBuyBanner" class="vip-banner" onclick="buyVipPass()">
+                👑 BUY VIP PASS (₹<span id="dispVipPrice">99</span>) <br>
+                <span style="font-size: 11px; font-weight: normal;">Get <span id="dispVipDisc">10</span>% OFF on all match fees!</span>
+            </div>
+
+            <div id="dailyBonusBox" class="bonus-card" onclick="claimDailyBonus()">
+                🎁 CLAIM DAILY FREE BONUS
+            </div>
+
+            <div id="liveStreamBanner" class="box-section" style="display:none; text-align:center; border-color: #e74c3c; padding: 15px; margin-top: 0; margin-bottom: 15px; animation: pulse 2s infinite;">
+                <h4 style="color: #e74c3c; margin-bottom: 10px;">🔴 LIVE MATCH RUNNING</h4>
+                <button class="primary-btn" style="background: #e74c3c; color: white; margin-top: 0;" onclick="openYouTubeLive()">▶️ WATCH NOW</button>
+            </div>
+
+            <div class="grid-container" id="playerMapContainer">
+                <p style="color: #aaa; text-align: center; grid-column: span 2;">Loading Maps...</p>
+            </div>
+        </div>
+
+        <div id="liveStreamView" class="view-section" style="display: none;">
+            <div class="box-section" style="text-align: center; border-color: #e74c3c;">
+                <h3 style="color: #e74c3c; margin-bottom: 10px;">🔴 LIVE MATCH</h3>
+                <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Enjoy the live action directly inside the app!</p>
+                <div class="video-container">
+                    <iframe id="youtubeIframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+                <button class="primary-btn secondary-btn" style="margin-top: 20px;" onclick="switchView('dashboardView', 'Dashboard')">⬅️ Back to Maps</button>
+            </div>
+        </div>
+
+        <div id="walletView" class="view-section" style="display: none;">
+            
+            <div class="box-section" style="text-align: center;">
+                <h3 style="color: #555;">Current Balance</h3>
+                <h1 style="font-size: 40px; color: #1abc9c; margin: 10px 0;">₹<span id="mainWalletBalance">0</span></h1>
+            </div>
+
+            <div class="box-section">
+                <div class="wallet-tabs">
+                    <span id="tabAddMoney" class="active" onclick="switchWalletTab('add')">Add Money</span>
+                    <span id="tabWithdraw" onclick="switchWalletTab('withdraw')">Withdraw</span>
+                </div>
+
+                <div id="addMoneySection" style="text-align: center;">
+                    <input type="number" id="rechargeAmount" placeholder="Enter Amount (₹)">
+                    
+                    <button class="primary-btn" style="background: #2ecc71; color: white; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="openPaymentGateway()">
+                        ➕ ADD MONEY
+                    </button>
+                    
+                    <p style="font-size: 13px; color: #888; font-weight: bold; margin-bottom: 10px;">--- OR SCAN QR ---</p>
+                    <div class="qr-box">
+                        <img id="walletQrImage" src="" alt="" style="display:none;">
+                        <p id="noWalletQrText" style="color:#e74c3c; font-size:12px; margin-top:10px; font-weight: bold;">Loading QR...</p>
+                    </div>
+                    <p style="font-size: 13px; color: #666; font-weight: bold;">Scan & Pay to Admin</p>
+
+                    <div class="upload-area" style="margin-top: 20px;">
+                        <p style="font-size: 30px;">📸</p>
+                        <p id="rechargeImageText" style="font-size: 14px; color: #555; font-weight: bold; margin-top: 5px; text-align: center;">UPLOAD PAYMENT SCREENSHOT</p>
+                        <input type="file" id="rechargeImage" accept="image/*" onchange="updateFileName('rechargeImage', 'rechargeImageText')">
+                    </div>
+                    <button class="primary-btn secondary-btn" onclick="submitWalletRecharge()">SUBMIT REQUEST</button>
+                    <p id="walletLoader" class="loader">Uploading... ⏳</p>
+                </div>
+
+                <div id="withdrawSection" style="display: none; text-align: center;">
+                    <p style="color: #666; font-size: 13px; margin-bottom: 5px;">Jeete hue paise apne bank mein transfer karein.</p>
+                    <p style="color: #e74c3c; font-size: 12px; font-weight: bold; margin-bottom: 15px;">Minimum Withdraw: ₹<span id="displayMinWithdraw">0</span></p>
+
+                    <input type="number" id="withdrawAmount" placeholder="Enter Amount (₹)">
+                    <p style="font-size: 13px; color: #555; font-weight: bold; margin: 10px 0;">METHOD 1: Enter UPI ID</p>
+                    <input type="text" id="withdrawUpi" placeholder="Enter Your UPI ID / Number">
+                    <p style="font-size: 13px; color: #888; font-weight: bold;">--- OR ---</p>
+                    <p style="font-size: 13px; color: #555; font-weight: bold; margin: 10px 0;">METHOD 2: Upload Your QR</p>
+                    <div class="upload-area" style="padding: 15px;">
+                        <p style="font-size: 24px;">📷</p>
+                        <p id="withdrawQrText" style="font-size: 12px; color: #555; font-weight: bold; margin-top: 5px;">UPLOAD YOUR QR CODE</p>
+                        <input type="file" id="withdrawQrImage" accept="image/*" onchange="updateFileName('withdrawQrImage', 'withdrawQrText')">
+                    </div>
+                    <button class="primary-btn" style="background: #e74c3c; color: white;" onclick="submitWithdrawal()">WITHDRAW MONEY</button>
+                    <p id="withdrawLoader" class="loader">Processing... ⏳</p>
+                    <p id="withdrawErrorMsg" style="color: #e74c3c; font-weight: bold; display: none; margin-top: 10px;">Balance kam hai!</p>
+                </div>
+            </div>
+            <h3 style="margin-top: 20px; color: #333;">Transactions History</h3>
+            <div id="walletHistoryList" style="margin-top: 15px;">Loading...</div>
+        </div>
+
+        <div id="paymentGatewayView" class="view-section" style="display: none;">
+            <div class="pg-card">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 45px; margin-bottom: 5px;">🛡️</div>
+                    <h2 style="font-size: 20px; font-weight: bold; color: #333;">Secure Checkout</h2>
+                    <p style="color: #888; font-size: 12px;">Fast & Encrypted Transaction</p>
+                </div>
+                
+                <div class="pg-summary">
+                    <p style="color: #888; font-size: 11px; margin-bottom: 5px; text-transform: uppercase;">Paying to</p>
+                    <p style="font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #333;">Tournament App</p>
+                    
+                    <div class="pg-summary-row">
+                        <span style="color: #666;">Player Name:</span>
+                        <strong style="color: #333;" id="pgPlayerName">--</strong>
+                    </div>
+                    <div class="pg-summary-row">
+                        <span style="color: #666;">Game UID:</span>
+                        <strong style="color: #333;" id="pgPlayerUid">--</strong>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; border-top: 1px dashed #ddd; padding-top: 15px; margin-top: 5px;">
+                        <span style="color: #666; font-size: 16px; align-self: center;">Amount to Pay</span>
+                        <strong style="font-size: 24px; color: #1abc9c;">₹<span id="pgAmount">0</span></strong>
+                    </div>
+                </div>
+
+                <p style="color: #888; font-size: 11px; text-align: center; margin-bottom: 12px; text-transform: uppercase; font-weight: bold;">Select Payment App</p>
+                
+                <div class="pg-grid">
+                    <button class="pg-btn" onclick="triggerUPI('gpay')">
+                        <img src="https://img.icons8.com/color/48/google-pay-india.png" alt="GPay">
+                        Google Pay
+                    </button>
+                    <button class="pg-btn" onclick="triggerUPI('phonepe')">
+                        <img src="https://img.icons8.com/color/48/phone-pe.png" alt="PhonePe">
+                        PhonePe
+                    </button>
+                    <button class="pg-btn" onclick="triggerUPI('paytm')">
+                        <img src="https://img.icons8.com/color/48/paytm.png" alt="Paytm">
+                        Paytm
+                    </button>
+                    <button class="pg-btn" onclick="triggerUPI('other')">
+                        <img src="https://img.icons8.com/color/48/bhim-upi.png" alt="UPI">
+                        Other UPI Apps
+                    </button>
+                </div>
+                
+                <button class="primary-btn" style="background: transparent; color: #888; border: 1px solid #ddd; margin-top: 25px;" onclick="cancelPayment()">⬅️ Cancel & Go Back</button>
+            </div>
+        </div>
+
+        <div id="leaderboardView" class="view-section" style="display: none;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h1 style="font-size: 50px; margin-bottom: 5px;">🏆</h1>
+                <h2 style="color: #f1c40f; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">Top Players</h2>
+                <p style="font-size: 13px; color: #666;">Highest Earning Masters</p>
+            </div>
+            <div id="leaderboardList">
+                <p style="text-align:center; color:#888;">Loading Leaderboard... ⏳</p>
+            </div>
+        </div>
+
+        <div id="paymentView" class="view-section" style="display: none;">
+            <div class="box-section" style="text-align: center;">
+                <h2 id="tourneyName" style="color: #333;">Solo</h2>
+                <p style="margin: 5px 0; font-size: 18px; color: #555;">Entry Fee: <strong style="color: #e74c3c;" id="entryFee">₹20</strong></p>
+                <p style="color: #1abc9c; font-weight: bold; margin-top: 10px;">Wallet Balance: ₹<span id="payWalletBalance">0</span></p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <p style="color: #555; font-size: 14px; margin-bottom: 15px;">Fee will be deducted from your wallet instantly.</p>
+                <button class="primary-btn" id="joinMatchBtn" onclick="joinMatchWithWallet()">PAY & JOIN INSTANTLY</button>
+                <p id="joinErrorMsg" style="color: #e74c3c; font-weight: bold; display: none; margin-top: 10px;">Insufficient Balance! Go to Wallet to add money.</p>
+
+                <div class="box-section" style="margin-top: 20px;">
+                    <p style="color: #f1c40f; font-weight: bold; margin-bottom: 12px; font-size: 18px;">Get Match Details</p>
+                    <input type="text" id="specialCodeInput" placeholder="Enter Your Special Code">
+                    <button class="primary-btn secondary-btn" style="padding: 12px;" onclick="getRoomId()">GET ROOM ID & PASS</button>
+                    <div id="roomDetails" class="room-details"></div>
+                    <div id="comingSoonMsg" class="coming-soon">⏳ Coming Soon! Admin abhi room bana rahe hain.</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="historyView" class="view-section" style="display: none;">
+            <div class="box-section" style="border-top: 5px solid #f1c40f; text-align: center; margin-top: 0;">
+                
+                <div class="profile-avatar" style="overflow: hidden; position: relative;">
+                    <img id="userAvatarImg" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                    <span id="userAvatarEmoji">👤</span>
+                </div>
+                <button class="primary-btn secondary-btn" style="padding: 6px 12px; font-size: 12px; width: auto; margin: 0 auto 15px auto; display: block; border-radius: 20px;" onclick="openProfileEdit()">✏️ Edit Profile</button>
+                
+                <h2 style="color: #333; margin-bottom: 5px;" id="displayNm">Player</h2>
+                <p style="color: #888; font-size: 14px; margin-bottom: 20px;">UID: <strong id="displayUid" style="color:#d35400;"></strong></p>
+                
+                <div style="display: flex; justify-content: space-around; background: #f9f9f9; padding: 15px 10px; border-radius: 10px; border: 1px solid #eee;">
+                    <div class="stat-box">
+                        <p>Matches</p>
+                        <h3 id="statUserMatches" style="color: #3498db;">0</h3>
+                    </div>
+                    <div class="stat-box" style="border-left: 1px solid #ddd; border-right: 1px solid #ddd; padding: 0 10px;">
+                        <p>Balance</p>
+                        <h3 id="statUserBalance" style="color: #2ecc71;">₹0</h3>
+                    </div>
+                    <div class="stat-box">
+                        <p>Total Win</p>
+                        <h3 id="statUserWon" style="color: #f39c12;">₹0</h3>
+                    </div>
+                </div>
+                <button class="primary-btn" style="background: #3498db; color: white; margin-top: 20px;" onclick="switchView('supportView', 'Help Desk')">🎧 IN-APP HELP DESK</button>
+                
+                <button id="adminPanelBtn" class="primary-btn" style="background: #e74c3c; color: white; margin-top: 10px; display: none;" onclick="showAdminApp()">👑 MODERATOR PANEL</button>
+            </div>
+            <h3 style="margin-top: 25px; border-bottom: 2px solid #eee; padding-bottom: 8px; color: #333;">Matches Joined</h3>
+            <div id="historyList" style="margin-top: 15px;">Loading history...</div>
+        </div>
+
+        <div id="supportView" class="view-section" style="display: none;">
+            <div class="box-section" style="border-color: #3498db; margin-top:0;">
+                <h4 style="color: #3498db; margin-bottom: 10px;">🎧 Contact Admin Support</h4>
+                <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Mera balance add nahi hua, ya prize nahi mila? Apni problem yahan likhein, admin jaldi reply karenge.</p>
+                <textarea id="userTicketMsg" placeholder="Apni problem detail mein likhein..." style="min-height: 100px; resize: vertical;"></textarea>
+                <button class="primary-btn" style="background: #3498db; color: white; margin-top: 0;" onclick="submitSupportTicket()">📩 SEND MESSAGE</button>
+                <p id="supportLoader" class="loader">Sending... ⏳</p>
+                
+                <div id="directContactBox" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; display: none;">
+                    <p style="font-size: 12px; color: #888; margin-bottom: 10px; font-weight: bold; text-align: center;">OR CONTACT US ON:</p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button id="instaBtn" class="primary-btn" style="background: linear-gradient(45deg, #f09433, #bc1888); color: white; margin: 0; display: none; padding: 10px; font-size: 14px;" onclick="openInsta()">📸 Instagram</button>
+                        <button id="helpBtn" class="primary-btn" style="background: #25D366; color: white; margin: 0; display: none; padding: 10px; font-size: 14px;" onclick="openHelp()">💬 WhatsApp</button>
+                    </div>
+                </div>
+
+            </div>
+            <h3 style="margin-top: 25px; border-bottom: 2px solid #eee; padding-bottom: 8px; color: #333;">Your Tickets</h3>
+            <div id="userTicketsList" style="margin-top: 15px;">Loading tickets...</div>
+        </div>
+
+        <div id="floatingWa" style="position: fixed; bottom: 80px; right: 20px; z-index: 1000; display: none; cursor: pointer; animation: popIn 0.5s ease;" onclick="openHelp()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style="width: 55px; height: 55px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border-radius: 50%;">
+        </div>
+
+        <nav class="bottom-nav">
+            <button class="nav-item" onclick="switchView('dashboardView', 'Dashboard')" title="Home">🏠</button>
+            <button class="nav-item" onclick="switchView('walletView', 'Wallet')" title="Wallet">💰</button>
+            <button class="nav-item" onclick="switchView('leaderboardView', 'Top Players')" title="Leaderboard">🏆</button>
+            <button class="nav-item" onclick="switchView('historyView', 'Profile')" title="Profile">👤</button>
+            <button class="nav-item" onclick="logout()" style="color: #e74c3c;" title="Logout">🚪</button>
+        </nav>
+    </div>
+
+    <div id="adminApp" class="screen" style="display: none;">
+        
+        <div id="adminMapsView">
+            <header>
+                <h3 style="color: #d35400;" id="adminMainTitle">👑 Owner Panel</h3>
+                <span style="width: 20px;"></span> 
+            </header>
+            <div class="view-section">
+                
+                <div class="two-col owner-only" style="margin-top: 0;">
+                    <div class="box-section" style="border-left: 5px solid #3498db; text-align:center; width:100%; margin-top:0; padding: 15px 10px;">
+                        <h4 style="color: #3498db; font-size: 12px;">👥 Users</h4>
+                        <p id="statTotalUsers" style="font-size: 20px; font-weight: bold; color: #333;">0</p>
+                    </div>
+                    <div class="box-section" style="border-left: 5px solid #f1c40f; text-align:center; width:100%; margin-top:0; padding: 15px 10px;">
+                        <h4 style="color: #f1c40f; font-size: 12px;">💰 Total Wallet</h4>
+                        <p id="statTotalWallet" style="font-size: 20px; font-weight: bold; color: #333;">₹0</p>
+                    </div>
+                </div>
+                
+                <div class="box-section owner-only" style="border-left: 5px solid #9b59b6; text-align:center; padding: 15px 10px; margin-top: 15px; margin-bottom: 20px;">
+                    <h4 style="color: #9b59b6; font-size: 12px;">🎮 Total Match Entries</h4>
+                    <p id="statTotalMatches" style="font-size: 20px; font-weight: bold; color: #333;">0</p>
+                </div>
+
+                <div class="box-section owner-only" style="border-color: #3498db;">
+                    <h4 style="margin-bottom: 10px; color: #3498db;">🖼️ Update Promo Banners</h4>
+                    <p style="font-size: 11px; color:#666; margin-bottom: 10px;">App ke dashboard par chalne wale Banners aur unka link upload karein:</p>
+                    
+                    <div class="upload-area" style="padding: 10px;">
+                        <span id="bannerUploadText" style="font-size: 14px; font-weight: bold; color: #555;">📷 Select Banner Image</span>
+                        <input type="file" id="adminBannerUpload" accept="image/*" onchange="updateFileName('adminBannerUpload', 'bannerUploadText')">
+                    </div>
+                    
+                    <input type="text" id="adminBannerLink" placeholder="Banner Link (e.g. YouTube/Winzo URL)" style="margin-top:10px; margin-bottom:0;">
+                    
+                    <button class="primary-btn secondary-btn" style="padding: 12px; margin-top:10px;" onclick="uploadBanner()">➕ ADD CLICKABLE BANNER</button>
+                    <div id="adminBannersList" style="margin-top: 15px;"></div>
+                </div>
+
+                <div class="two-col" style="margin-top: 0;">
+                    <div class="box-section" style="border-left: 5px solid #1abc9c; text-align:center; cursor:pointer; width:100%; margin-top:0;" onclick="openAdminWalletRequests('add')">
+                        <h4 style="color: #1abc9c;">📥 Add Req</h4>
+                        <p style="font-size: 11px; color: #666;">Approve Adds</p>
+                    </div>
+                    <div class="box-section" style="border-left: 5px solid #e74c3c; text-align:center; cursor:pointer; width:100%; margin-top:0;" onclick="openAdminWalletRequests('withdraw')">
+                        <h4 style="color: #e74c3c;">📤 Withdraws</h4>
+                        <p style="font-size: 11px; color: #666;">Pay Winners</p>
+                    </div>
+                </div>
+                
+                <div class="box-section" style="text-align:center; margin-top: 15px; border-color: #3498db; padding: 10px;">
+                    <button class="primary-btn" style="background: #3498db; color: white; margin-top: 0;" onclick="openAdminSupport()">🎧 Help Desk Tickets</button>
+                </div>
+
+                <div class="box-section owner-only" style="border-color: #9b59b6; margin-top: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #9b59b6;">📢 App Settings & Alerts</h4>
+
+                    <p style="font-size: 11px; color:#9b59b6; font-weight: bold; margin-top: 10px; margin-bottom:5px;">👑 VIP Pass Settings:</p>
+                    <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                        <input type="number" id="adminVipPrice" placeholder="VIP Price (₹)" style="margin:0; width:50%;">
+                        <input type="number" id="adminVipDisc" placeholder="Discount (%)" style="margin:0; width:50%;">
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+
+                    <p style="font-size: 11px; color:#9b59b6; font-weight: bold; margin-top: 10px; margin-bottom:5px;">🎮 App Game Theme:</p>
+                    <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                        <input type="text" id="adminGameName" placeholder="Game Name (e.g. BGMI)" style="margin:0; width:50%;">
+                        <input type="text" id="adminGameIdLabel" placeholder="ID Label (e.g. BGMI ID)" style="margin:0; width:50%;">
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+
+                    <p style="font-size: 11px; color:#3498db; font-weight: bold; margin-top: 10px; margin-bottom:5px;">🚀 Force App Update System <br>(Abhi version: <strong id="adminAppVersionLabel" style="color:#e74c3c;">1</strong>):</p>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 15px;">
+                        <input type="number" id="adminAppVersion" placeholder="New Version (e.g. 2)" style="margin:0;">
+                        <input type="text" id="adminAppLink" placeholder="APK Link" style="margin:0;">
+                    </div>
+
+                    <p style="font-size: 11px; color:#3498db; font-weight: bold; margin-top: 10px; margin-bottom:5px;">📦 Upload New APK (Beta):</p>
+                    <div class="upload-area" style="padding: 10px; margin-bottom: 10px;">
+                        <span id="apkUploadText" style="font-size: 14px; font-weight: bold; color: #555;">Select APK File</span>
+                        <input type="file" id="adminApkUpload" accept=".apk" onchange="updateFileName('adminApkUpload', 'apkUploadText')">
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+
+                    <p style="font-size: 11px; color:#e74c3c; font-weight: bold; margin-top: 10px; margin-bottom:5px;">🚨 Send Live Flash Alert:</p>
+                    <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                        <input type="text" id="adminFlashMsg" placeholder="Urgent message for all players..." style="margin:0;">
+                        <button class="primary-btn" style="margin:0; background:#e74c3c; color:white; width: 100px;" onclick="sendFlashAlert()">SEND</button>
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+                    
+                    <input type="text" id="adminNotice" placeholder="Live Marquee Notice (e.g. Match 9 baje hai)">
+                    <input type="text" id="adminYoutube" placeholder="YouTube Link (e.g. youtube.com/...)">
+                    <input type="text" id="adminWhatsApp" placeholder="WhatsApp Link / Number">
+                    <input type="text" id="adminInstagram" placeholder="Instagram Link / Username">
+                    <input type="text" id="adminUpi" placeholder="Payment UPI ID (e.g. 9876543210@ybl)">
+                    
+                    <p style="font-size: 11px; color:#666; font-weight: bold; margin-top: 10px; margin-bottom:5px;">Daily Free Bonus (0 to disable):</p>
+                    <input type="number" id="adminDailyBonus" placeholder="Amount (e.g. 2)">
+                    
+                    <p style="font-size: 11px; color:#666; font-weight: bold; margin-top: 10px; margin-bottom:5px;">Edit Player Rules:</p>
+                    <textarea id="adminRulesText" placeholder="Enter Custom Rules..." style="min-height: 100px; resize: vertical; margin-bottom: 5px;"></textarea>
+
+                    <button class="primary-btn" style="background: #9b59b6; color: white;" onclick="updateNoticeSettings()">UPDATE SETTINGS</button>
+                </div>
+
+                <div class="box-section owner-only" style="border-color: #f39c12; margin-top: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #f39c12;">👥 Manage Sub-Admins</h4>
+                    <p style="font-size: 11px; color:#666; margin-bottom: 10px;">Player ki UID daalkar use Moderator (Admin) banayein:</p>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="newSubAdminUid" placeholder="Enter Player UID" style="margin:0;">
+                        <button class="primary-btn" style="background: #f39c12; color: white; margin:0; width:120px;" onclick="addSubAdmin()">➕ ADD</button>
+                    </div>
+                    <div id="subAdminList" style="margin-top: 15px;"></div>
+                </div>
+
+                <div class="box-section owner-only" style="text-align:center;">
+                    <h4 style="margin-bottom: 10px; color: #333;">⚙️ Update App QR Code</h4>
+                    <div class="upload-area" style="padding: 10px; margin-top:10px;">
+                        <span id="adminQrText" style="font-size: 14px; font-weight: bold; color: #555; text-align: center;">📷 Select QR Image</span>
+                        <input type="file" id="adminQrUpload" accept="image/*" onchange="updateFileName('adminQrUpload', 'adminQrText')">
+                    </div>
+                    <button class="primary-btn secondary-btn" style="padding: 12px; margin-top:5px;" onclick="saveAdminQR()">SAVE QR CODE</button>
+                    <p id="qrLoader" class="loader">Saving... ⏳</p>
+                </div>
+
+                <button class="primary-btn" style="background: #34495e; color: white; margin-top: 15px;" onclick="openAdminUsersDashboard()">👥 All Users Dashboard</button>
+
+                <h4 style="text-align: center; color: #555; margin-top: 20px;">Manage Maps & Rooms</h4>
+                
+                <div class="box-section owner-only" style="border-color: #2ecc71; margin-top: 15px; margin-bottom: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #2ecc71;">➕ Create New Map</h4>
+                    <p style="font-size: 11px; color:#666; margin-bottom: 10px;">Naya tournament map ya category add karein:</p>
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <input type="text" id="newMapName" placeholder="Map Name (e.g. CS Ranked)" style="margin:0;">
+                        <input type="text" id="newMapIcon" placeholder="Icon (e.g. ⚔️)" style="margin:0; width: 30%;">
+                    </div>
+                    <div class="two-col">
+                        <input type="number" id="newMapFee" placeholder="Entry Fee (₹)">
+                        <input type="number" id="newMapLimit" placeholder="Player Limit (e.g. 48)">
+                    </div>
+                    <div class="two-col">
+                        <input type="text" id="newMapPrize" placeholder="Prize (e.g. ₹500)">
+                        <input type="text" id="newMapTime" placeholder="Time (e.g. 8 PM)">
+                    </div>
+                    <button class="primary-btn" style="background: #2ecc71; color: white; margin-top: 5px;" onclick="createNewMap()">CREATE NEW MAP</button>
+                </div>
+
+                <div class="grid-container" id="adminMapContainer"></div>
+            </div>
+        </div>
+
+        <div id="adminProfileView" style="display: none;">
+            <header>
+                <h3 style="color: #333;">Owner Settings</h3>
+                <span style="width: 40px;"></span> 
+            </header>
+            <div class="view-section">
+                <div class="box-section" style="border-color: #8e44ad; margin-top:0;">
+                    <h4 style="margin-bottom: 15px; color: #8e44ad;">🔐 Change Owner Login</h4>
+                    <p style="font-size: 11px; color:#666; margin-bottom: 5px; font-weight: bold;">New Owner ID (UID):</p>
+                    <input type="text" id="adminNewId" placeholder="Enter New Owner ID">
+                    <p style="font-size: 11px; color:#666; margin-bottom: 5px; font-weight: bold; margin-top: 5px;">New Password:</p>
+                    <input type="text" id="adminNewPass" placeholder="Enter New Password">
+                    <button class="primary-btn" style="background: #8e44ad; color: white; padding: 12px; margin-top: 10px;" onclick="updateAdminCredentials()">SAVE CREDENTIALS</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminWalletRequestsView" style="display: none;">
+            <header>
+                <button onclick="backToAdminMaps()" style="background:none; border:none; color:#3498db; font-size:16px; font-weight:bold; cursor:pointer;">⬅️ Back</button>
+                <h3 id="adminWalletTitle" style="color: #333;">Requests</h3>
+                <span style="width: 40px;"></span> 
+            </header>
+            <div id="adminWithdrawLimitBox" class="box-section owner-only" style="display: none; margin: 15px 20px 0 20px; border-color: #e74c3c; padding: 15px;">
+                <h4 style="color:#e74c3c; margin-bottom:10px;">⚙️ Set Minimum Withdrawal</h4>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="adminMinWithdrawInp" placeholder="Amount (e.g. 20)" style="margin:0;">
+                    <button class="primary-btn" style="margin:0; background:#e74c3c; color:white; width: 120px;" onclick="setMinWithdrawal()">SET</button>
+                </div>
+            </div>
+            <div class="view-section" id="adminWalletList"></div>
+        </div>
+
+        <div id="adminSupportView" style="display: none;">
+            <header>
+                <button onclick="backToAdminMaps()" style="background:none; border:none; color:#3498db; font-size:16px; font-weight:bold; cursor:pointer;">⬅️ Back</button>
+                <h3 style="color: #333;">Help Desk</h3>
+                <span style="width: 40px;"></span> 
+            </header>
+            <div class="view-section" id="adminSupportList"></div>
+        </div>
+        
+        <div id="adminUsersView" style="display: none;">
+            <header>
+                <button onclick="backToAdminMaps()" style="background:none; border:none; color:#3498db; font-size:16px; font-weight:bold; cursor:pointer;">⬅️ Back</button>
+                <h3 style="color: #333;">Users Dashboard</h3>
+                <span style="width: 40px;"></span> 
+            </header>
+            <div class="view-section">
+                <input type="text" id="userSearchInput" placeholder="Search user by Name or UID..." onkeyup="filterUsers()" style="margin-bottom: 15px;">
+                <div id="adminAllUsersList">Loading users...</div>
+            </div>
+        </div>
+
+        <div id="adminMapDetailsView" style="display: none;">
+            <header>
+                <button onclick="backToAdminMaps()" style="background:none; border:none; color:#3498db; font-size:16px; font-weight:bold; cursor:pointer;">⬅️ Back</button>
+                <h3 id="adminMapTitle" style="color: #d35400;">Map Details</h3>
+                <span style="width: 40px;"></span> 
+            </header>
+            <div class="view-section">
+                <div class="box-section owner-only" style="border-color: #2ecc71; margin-top:0;">
+                    <h4 style="margin-bottom: 15px; color: #2ecc71;">Customize Map Details</h4>
+                    <p style="font-size: 11px; color:#666; margin-bottom: 5px; font-weight: bold;">Map Name:</p>
+                    <input type="text" id="adminSetMapName" placeholder="Map Name (e.g. Solo)">
+                    <p style="font-size: 11px; color:#666; margin-bottom: 5px; font-weight: bold; margin-top: 5px;">Map Settings:</p>
+                    <div class="two-col">
+                        <input type="number" id="adminSetFee" placeholder="Entry Fee (₹)">
+                        <input type="number" id="adminSetLimit" placeholder="Player Limit (e.g. 48)">
+                    </div>
+                    <div class="two-col">
+                        <input type="text" id="adminSetPrize" placeholder="Prize (e.g. ₹500)">
+                        <input type="text" id="adminSetTime" placeholder="Time (e.g. 8 PM)">
+                    </div>
+                    <button class="primary-btn" style="background: #2ecc71; padding: 12px; margin-top: 5px;" onclick="updateMapDetails()">UPDATE SETTINGS</button>
+                </div>
+                
+                <div class="box-section" style="border-color: #f1c40f;">
+                    <h4 style="margin-bottom: 15px; color: #333;">Upload Room ID & Pass</h4>
+                    <input type="text" id="adminSetRoomId" placeholder="Enter Room ID">
+                    <input type="text" id="adminSetRoomPass" placeholder="Enter Password">
+                    <button class="primary-btn secondary-btn" style="padding: 12px; margin-top: 5px;" onclick="uploadRoomDetails()">UPLOAD ID & PASS</button>
+                </div>
+                
+                <div class="box-section" style="border-color: #e74c3c;">
+                    <h4 style="margin-bottom: 10px; color: #e74c3c;">⚠️ End Tournament (Reset Map)</h4>
+                    <button class="primary-btn" style="background: #e74c3c; color: white;" onclick="resetMapData()">🏁 FINISH MATCH & RESET</button>
+                </div>
+                
+                <div class="box-section" style="border-color: #3498db;">
+                    <h4 style="margin-bottom: 10px; color: #3498db;">⚙️ Map Availability</h4>
+                    <div style="display:flex; gap:10px;">
+                        <button class="primary-btn" style="background:#2ecc71; margin-top:0;" onclick="setMapAvailability(true)">✅ OPEN MAP</button>
+                        <button class="primary-btn" style="background:#7f8c8d; color:white; margin-top:0;" onclick="setMapAvailability(false)">❌ CLOSE MAP</button>
+                    </div>
+                </div>
+
+                <div class="box-section owner-only" style="border-color: #c0392b; margin-top: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #c0392b;">🗑️ Delete Map Permanently</h4>
+                    <p style="font-size: 11px; color:#666; margin-bottom: 10px;">Ye map aur iska saara data hamesha ke liye delete ho jayega.</p>
+                    <button class="primary-btn" style="background: #c0392b; color: white; margin-top: 0;" onclick="deleteEntireMap()">DELETE MAP</button>
+                </div>
+
+                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 25px; color: #333;">Live Players For This Map</h3>
+                <div id="adminPlayerList" style="margin-top: 15px;">Listening...</div>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <button class="nav-item" onclick="backToAdminMaps()" title="Home">🏠</button>
+            <button class="nav-item" onclick="openAdminWalletRequests('add')" title="Wallet">💰</button>
+            <button class="nav-item" onclick="openAdminUsersDashboard()" title="Users">👥</button>
+            <button id="adminSettingsNav" class="nav-item owner-only" onclick="openAdminProfile()" title="Settings">⚙️</button>
+            <button class="nav-item" onclick="logout()" style="color: #e74c3c;" title="Logout">🚪</button>
+        </nav>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+  apiKey: "AIzaSyA3dsZpqW8nbFbNaxJaqkiJBo9NkWjU-4Y",
+  authDomain: "turnament-pro-3d4ad.firebaseapp.com",
+  databaseURL: "https://turnament-pro-3d4ad-default-rtdb.firebaseio.com",
+  projectId: "turnament-pro-3d4ad",
+  storageBucket: "turnament-pro-3d4ad.firebasestorage.app",
+  messagingSenderId: "298384363554",
+  appId: "1:298384363554:web:7b7fb0fab4667b75eb3a7b"
+};
+        
+        if (!firebase.apps.length) { 
+            firebase.initializeApp(firebaseConfig); 
+        }
+        
+        const db = firebase.database();
+        const CURRENT_APP_VERSION = 1; 
+
+        // Global Variables
+        let currentMapCounts = {}; 
+        let mapsData = null;
+        let currentTourney = "";
+        let currentFee = 0;
+        let authMode = "login";
+        let adminCurrentMap = ""; 
+        let currentUserUid = "";
+        let currentUserName = "";
+        let currentUserBalance = 0;
+        let currentUserAvatar = ""; 
+        
+        let adminUid = "00780"; 
+        let adminPass = "1234";
+        let isAdmin = false;    
+        let isOwner = false;    
+        let subAdminsList = {};
+
+        let isVIP = false;
+        let vipPrice = 99;
+        let vipDiscount = 10;
+
+        let adminPhone = ""; 
+        let adminInsta = ""; 
+        let adminUpiId = ""; 
+        let youtubeLiveUrl = ""; 
+        let minWithdrawAmount = 0;
+        let dailyBonusAmount = 0; 
+        let userLastCheckIn = ""; 
+        let allUsersData = []; 
+        let bannerSlideInterval; 
+        
+        let lastSeenAlert = parseInt(localStorage.getItem('lastSeenAlert')) || 0; 
+        let latestApkData = ""; 
+        let skippedUpdateVersion = 0; 
+
+        let pendingUserAction = null;
+        let pendingActionUid = null;
+        let userActiveMatches = {};
+        let notifiedRooms = {};
+        let currentRoomsData = {};
+
+        let pendingRechargeAmount = 0;
+
+        const defaultMaps = {
+            "Solo": { icon: "👤", fee: 20, prize: "₹150", time: "8 PM", available: true, limit: 48 },
+            "Duo": { icon: "👥", fee: 40, prize: "₹300", time: "9 PM", available: true, limit: 48 },
+            "Squad": { icon: "👨‍👩‍👧‍👦", fee: 80, prize: "₹600", time: "10 PM", available: true, limit: 48 }
+        };
+
+        function requestNotificationPermission() {
+            if ("Notification" in window) {
+                if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                    Notification.requestPermission().then(permission => {
+                        if(permission === "granted") console.log("Push Notifications Enabled!");
+                    });
+                }
+            }
+        }
+
+        function sendBrowserNotification(title, bodyText) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, {
+                    body: bodyText,
+                    icon: "https://cdn-icons-png.flaticon.com/512/732/732228.png"
+                });
+            }
+        }
+        
+        function updateSocialIconsUI() {
+            let contactBox = document.getElementById('directContactBox');
+            let helpBtn = document.getElementById('helpBtn');
+            let instaBtn = document.getElementById('instaBtn');
+            let floatingWa = document.getElementById('floatingWa');
+            
+            let hasWa = (adminPhone && adminPhone.trim().length > 0);
+            let hasInsta = (adminInsta && adminInsta.trim().length > 0);
+
+            if(floatingWa) {
+                floatingWa.style.display = hasWa ? 'block' : 'none';
+            }
+
+            if (contactBox) {
+                if (hasWa || hasInsta) {
+                    contactBox.style.display = 'block';
+                    if (helpBtn) helpBtn.style.display = hasWa ? 'block' : 'none';
+                    if (instaBtn) instaBtn.style.display = hasInsta ? 'block' : 'none';
+                } else {
+                    contactBox.style.display = 'none';
+                    if (helpBtn) helpBtn.style.display = 'none';
+                    if (instaBtn) instaBtn.style.display = 'none';
+                }
+            }
+        }
+
+        window.onload = () => {
+            currentUserUid = localStorage.getItem('currentUserUid');
+            currentUserName = localStorage.getItem('currentUserName');
+            
+            isOwner = (currentUserUid === adminUid);
+            isAdmin = localStorage.getItem('isAdmin') === 'true';
+
+            // Check Sub-Admins
+            db.ref('sub_admins').on('value', snap => {
+                subAdminsList = snap.val() || {};
+                
+                if (currentUserUid && currentUserUid !== adminUid) {
+                    if(subAdminsList[currentUserUid]) {
+                        isAdmin = true;
+                        isOwner = false;
+                        localStorage.setItem('isAdmin', 'true');
+                        if (document.getElementById('adminPanelBtn')) {
+                            document.getElementById('adminPanelBtn').style.display = 'block';
+                        }
+                    } else {
+                        isAdmin = false;
+                        localStorage.setItem('isAdmin', 'false');
+                        if (document.getElementById('adminPanelBtn')) {
+                            document.getElementById('adminPanelBtn').style.display = 'none';
+                        }
+                    }
+                }
+                if(isOwner) renderSubAdminsList();
+            });
+
+            db.ref('maps').once('value').then((snap) => {
+                if(!snap.exists()){ 
+                    db.ref('maps').set(defaultMaps); 
+                }
+            });
+
+            db.ref('maps').on('value', (snapshot) => {
+                mapsData = snapshot.val() || defaultMaps;
+                renderPlayerMaps();
+                if(isAdmin) renderAdminMaps();
+            });
+
+            db.ref('payments').on('value', (snapshot) => {
+                currentMapCounts = {};
+                let totalMatches = 0;
+                
+                snapshot.forEach((child) => {
+                    totalMatches++;
+                    const pay = child.val();
+                    if (!pay.archived) { 
+                        currentMapCounts[pay.tourney] = (currentMapCounts[pay.tourney] || 0) + 1;
+                    }
+                });
+                
+                if(document.getElementById('statTotalMatches')) {
+                    document.getElementById('statTotalMatches').innerText = totalMatches;
+                }
+                
+                renderPlayerMaps();
+                if(isAdmin) renderAdminMaps();
+                if(currentUserUid && !isAdmin) loadMatchHistory(); 
+            });
+
+            db.ref('users').on('value', snap => {
+                let userCount = 0;
+                let walletSum = 0;
+                
+                snap.forEach(child => {
+                    if(child.key !== adminUid) {
+                        userCount++;
+                        walletSum += (child.val().balance || 0);
+                    }
+                });
+                
+                if(document.getElementById('statTotalUsers')) {
+                    document.getElementById('statTotalUsers').innerText = userCount;
+                }
+                if(document.getElementById('statTotalWallet')) {
+                    document.getElementById('statTotalWallet').innerText = "₹" + walletSum;
+                }
+            });
+
+            db.ref('settings').on('value', snap => {
+                const data = snap.val() || {};
+                
+                if(data.adminAuth) {
+                    adminUid = data.adminAuth.uid || "00780";
+                    adminPass = data.adminAuth.password || "1234";
+                    isOwner = (currentUserUid === adminUid); 
+                }
+
+                if(data.vipPrice !== undefined) {
+                    vipPrice = parseInt(data.vipPrice);
+                    if(document.getElementById('adminVipPrice')) document.getElementById('adminVipPrice').value = vipPrice;
+                    if(document.getElementById('dispVipPrice')) document.getElementById('dispVipPrice').innerText = vipPrice;
+                }
+                if(data.vipDiscount !== undefined) {
+                    vipDiscount = parseInt(data.vipDiscount);
+                    if(document.getElementById('adminVipDisc')) document.getElementById('adminVipDisc').value = vipDiscount;
+                    if(document.getElementById('dispVipDisc')) document.getElementById('dispVipDisc').innerText = vipDiscount;
+                }
+
+                if(data.gameName) {
+                    document.getElementById('mainAppTitle').innerText = data.gameName;
+                    if(document.getElementById('adminGameName')) document.getElementById('adminGameName').value = data.gameName;
+                }
+                if(data.gameIdLabel) {
+                    document.getElementById('playerUid').placeholder = data.gameIdLabel;
+                    if(document.getElementById('adminGameIdLabel')) document.getElementById('adminGameIdLabel').value = data.gameIdLabel;
+                }
+
+                let latestVer = parseInt(data.appVersion) || 1;
+                let apkLink = data.appLink || "";
+                
+                if(document.getElementById('adminAppVersionLabel')) {
+                    document.getElementById('adminAppVersionLabel').innerText = latestVer;
+                }
+                if(document.getElementById('adminAppVersion')) {
+                    document.getElementById('adminAppVersion').value = latestVer;
+                }
+                if(document.getElementById('adminAppLink')) {
+                    document.getElementById('adminAppLink').value = apkLink;
+                }
+                
+                if(latestVer > CURRENT_APP_VERSION && latestVer !== skippedUpdateVersion && !isAdmin) {
+                    document.getElementById('updateOverlay').style.display = 'flex';
+                    document.getElementById('updateBtn').onclick = () => window.location.href = apkLink;
+                } else if(document.getElementById('updateOverlay')) {
+                    document.getElementById('updateOverlay').style.display = 'none';
+                }
+
+                if(data.flashAlert && data.flashAlert.message) {
+                    let alertId = parseInt(data.flashAlert.id);
+                    if(alertId > lastSeenAlert && !isAdmin) { 
+                        document.getElementById('flashAlertMessage').innerText = data.flashAlert.message;
+                        document.getElementById('flashAlertOverlay').style.display = 'flex';
+                        document.getElementById('flashAlertOverlay').dataset.alertId = alertId;
+                        
+                        sendBrowserNotification("🚨 URGENT ALERT", data.flashAlert.message);
+                    }
+                }
+
+                // Load Clickable Banners
+                if(data.banners) {
+                    renderBanners(data.banners);
+                    if(isOwner) renderAdminBannerList(data.banners);
+                } else {
+                    document.getElementById('bannerSlider').style.display = 'none';
+                    if(isOwner) {
+                        document.getElementById('adminBannersList').innerHTML = '<p style="color:#888; font-size:12px;">No banners added yet.</p>';
+                    }
+                }
+
+                if(data.minWithdraw !== undefined) {
+                    minWithdrawAmount = parseInt(data.minWithdraw);
+                    if(document.getElementById('displayMinWithdraw')) document.getElementById('displayMinWithdraw').innerText = minWithdrawAmount;
+                    if(document.getElementById('adminMinWithdrawInp')) document.getElementById('adminMinWithdrawInp').value = minWithdrawAmount;
+                } else {
+                    minWithdrawAmount = 0;
+                    if(document.getElementById('displayMinWithdraw')) document.getElementById('displayMinWithdraw').innerText = 0;
+                }
+
+                if(data.dailyBonus !== undefined) {
+                    dailyBonusAmount = parseInt(data.dailyBonus);
+                    if(document.getElementById('adminDailyBonus')) document.getElementById('adminDailyBonus').value = dailyBonusAmount;
+                } else {
+                    dailyBonusAmount = 0;
+                    if(document.getElementById('adminDailyBonus')) document.getElementById('adminDailyBonus').value = 0;
+                }
+                updateBonusBoxVisibility(); 
+
+                if(data.rules && data.rules.trim() !== "") {
+                    document.getElementById('dynamicRulesContainer').innerText = data.rules;
+                    if(document.getElementById('adminRulesText')) document.getElementById('adminRulesText').value = data.rules;
+                } else {
+                    const defaultRules = "🚫 No Hacks Allowed.\n🤝 No Teaming Allowed.\n💰 Prize 1 ghante mein milega.";
+                    document.getElementById('dynamicRulesContainer').innerText = defaultRules;
+                    if(document.getElementById('adminRulesText')) document.getElementById('adminRulesText').value = defaultRules;
+                }
+
+                if(data.notice && data.notice.trim() !== "") {
+                    document.getElementById('noticeBoard').style.display = 'block';
+                    document.getElementById('noticeText').innerText = data.notice;
+                    if(document.getElementById('adminNotice')) document.getElementById('adminNotice').value = data.notice;
+                } else {
+                    document.getElementById('noticeBoard').style.display = 'none';
+                    if(document.getElementById('adminNotice')) document.getElementById('adminNotice').value = "";
+                }
+
+                if(data.youtubeLink && data.youtubeLink.trim() !== "") {
+                    youtubeLiveUrl = data.youtubeLink.trim();
+                    if(document.getElementById('adminYoutube')) document.getElementById('adminYoutube').value = youtubeLiveUrl;
+                    
+                    if(currentUserUid && !isAdmin && youtubeLiveUrl.includes(".")) {
+                        document.getElementById('liveStreamBanner').style.display = 'block';
+                    } else {
+                        document.getElementById('liveStreamBanner').style.display = 'none';
+                    }
+                } else {
+                    youtubeLiveUrl = "";
+                    document.getElementById('liveStreamBanner').style.display = 'none';
+                    if(document.getElementById('adminYoutube')) document.getElementById('adminYoutube').value = "";
+                }
+
+                adminPhone = (data.whatsapp && data.whatsapp.trim() !== "") ? data.whatsapp.trim() : "";
+                if(document.getElementById('adminWhatsApp')) document.getElementById('adminWhatsApp').value = adminPhone;
+                
+                adminInsta = (data.instagram && data.instagram.trim() !== "") ? data.instagram.trim() : "";
+                if(document.getElementById('adminInstagram')) document.getElementById('adminInstagram').value = adminInsta;
+                
+                if(!isAdmin) updateSocialIconsUI();
+
+                if(data.upiId && data.upiId.trim() !== "") {
+                    adminUpiId = data.upiId.trim();
+                    if(document.getElementById('adminUpi')) document.getElementById('adminUpi').value = adminUpiId;
+                }
+
+                if(data.qrCode) {
+                    document.getElementById('walletQrImage').src = data.qrCode;
+                    document.getElementById('walletQrImage').style.display = 'inline-block';
+                    document.getElementById('noWalletQrText').style.display = 'none';
+                } else {
+                    document.getElementById('walletQrImage').style.display = 'none';
+                    document.getElementById('noWalletQrText').style.display = 'block';
+                }
+            });
+
+            if (isAdmin) { 
+                showAdminApp(); 
+            } else if (currentUserUid) { 
+                if(localStorage.getItem('rulesAccepted_' + currentUserUid) === 'true') {
+                    showMainApp();
+                } else {
+                    showRulesScreen(); 
+                }
+            }
+            
+            document.getElementById('updateBtn').onclick = () => {
+                if(!latestApkData) {
+                    alert("Update file abhi upload nahi hui hai. Kripya Admin se sampark karein.");
+                    return;
+                }
+                
+                document.getElementById('updateBtn').innerText = "Downloading... ⏳";
+                let a = document.createElement("a");
+                a.href = latestApkData;
+                a.download = "TournamentApp_Update.apk";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                setTimeout(() => {
+                    document.getElementById('updateBtn').innerText = "UPDATE";
+                    closeUpdatePopup();
+                }, 2000);
+            };
+        };
+
+        // --- 3D PUBLIC PROFILE LOGIC ---
+        function openPublicProfile(uid) {
+            document.getElementById('publicProfileOverlay').style.display = 'flex';
+            
+            document.getElementById('pubName').innerText = "Loading...";
+            document.getElementById('pubUidText').innerText = uid;
+            document.getElementById('pubMatches').innerText = "...";
+            document.getElementById('pubWon').innerText = "...";
+            document.getElementById('pubAvatar').src = "https://via.placeholder.com/150/222222/FFFFFF?text=?";
+            
+            document.getElementById('pubVipBadge').style.display = 'none';
+            document.getElementById('pubNormalBadge').style.display = 'inline-block';
+
+            db.ref('users/' + uid).once('value').then(snap => {
+                let u = snap.val();
+                if(u) {
+                    document.getElementById('pubName').innerText = u.name;
+                    document.getElementById('pubWon').innerText = "₹" + (u.totalWon || 0);
+                    
+                    if(u.avatar) {
+                        document.getElementById('pubAvatar').src = u.avatar;
+                    } else {
+                        document.getElementById('pubAvatar').src = `https://ui-avatars.com/api/?name=${u.name}&background=f1c40f&color=000&size=150`;
+                    }
+                    
+                    if(u.isVIP) {
+                        document.getElementById('pubVipBadge').style.display = 'inline-block';
+                        document.getElementById('pubNormalBadge').style.display = 'none';
+                    }
+                }
+            });
+
+            db.ref('payments').orderByChild('uid').equalTo(uid).once('value').then(snap => {
+                let matchCount = 0;
+                snap.forEach(child => { 
+                    matchCount++; 
+                });
+                document.getElementById('pubMatches').innerText = matchCount;
+            });
+
+            // 3D Tilt Logic
+            const card = document.getElementById('publicCard');
+            const overlay = document.getElementById('publicProfileOverlay');
+
+            overlay.addEventListener('mousemove', (e) => {
+                let xAxis = (window.innerWidth / 2 - e.pageX) / 15;
+                let yAxis = (window.innerHeight / 2 - e.pageY) / 15;
+                card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+            });
+
+            overlay.addEventListener('mouseleave', () => {
+                card.style.transform = `rotateY(0deg) rotateX(0deg)`;
+            });
+        }
+
+        function closePublicProfile() {
+            document.getElementById('publicProfileOverlay').style.display = 'none';
+            document.getElementById('publicCard').style.transform = `rotateY(0deg) rotateX(0deg)`;
+        }
+
+        function openProfileEdit() {
+            document.getElementById('editProfileName').value = currentUserName;
+            
+            if (!isVIP && !isAdmin) {
+                document.getElementById('editProfileName').disabled = true;
+                document.getElementById('editProfileName').style.cursor = 'not-allowed';
+                document.getElementById('editProfileName').style.opacity = '0.6';
+                document.getElementById('vipNameMsg').style.display = 'block';
+                document.getElementById('vipNameMsg').innerText = "👑 Name change is for VIP members only!";
+            } else {
+                document.getElementById('editProfileName').disabled = false;
+                document.getElementById('editProfileName').style.cursor = 'text';
+                document.getElementById('editProfileName').style.opacity = '1';
+                document.getElementById('vipNameMsg').style.display = 'none';
+            }
+            
+            document.getElementById('profileEditOverlay').style.display = 'flex';
+        }
+
+        function closeProfileEdit() {
+            document.getElementById('profileEditOverlay').style.display = 'none';
+        }
+
+        function saveProfileChanges() {
+            const newName = document.getElementById('editProfileName').value.trim();
+            
+            if(!newName) { 
+                alert("Name cannot be empty!"); 
+                return; 
+            }
+
+            if (!isVIP && !isAdmin && newName !== currentUserName) {
+                alert("Sirf VIP members apna naam badal sakte hain!");
+                return;
+            }
+
+            const avatarInput = document.getElementById('avatarUpload');
+            let updates = {};
+
+            if (newName !== currentUserName) {
+                updates.name = newName;
+            }
+
+            if(avatarInput.files.length === 0 && Object.keys(updates).length === 0) {
+                closeProfileEdit();
+                return;
+            }
+
+            document.getElementById('profileLoader').style.display = 'block';
+
+            if(avatarInput.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    updates.avatar = e.target.result;
+                    pushProfileUpdate(updates);
+                };
+                reader.readAsDataURL(avatarInput.files[0]);
+            } else {
+                pushProfileUpdate(updates);
+            }
+        }
+
+        function pushProfileUpdate(updates) {
+            db.ref('users/' + currentUserUid).update(updates).then(() => {
+                document.getElementById('profileLoader').style.display = 'none';
+                
+                if (updates.name) {
+                    currentUserName = updates.name;
+                    localStorage.setItem('currentUserName', currentUserName);
+                }
+                
+                closeProfileEdit();
+                document.getElementById('avatarUpload').value = '';
+                document.getElementById('avatarUploadText').innerText = "📷 Upload Custom Avatar";
+                document.getElementById('avatarUploadText').style.color = "#555";
+                
+                alert("✅ Profile Updated Successfully!");
+            }).catch(err => {
+                document.getElementById('profileLoader').style.display = 'none';
+                alert("Error updating profile.");
+            });
+        }
+
+        function closeUpdatePopup() {
+            skippedUpdateVersion = parseInt(document.getElementById('adminAppVersionLabel').innerText) || CURRENT_APP_VERSION + 1;
+            document.getElementById('updateOverlay').style.display = 'none';
+        }
+
+        function buyVipPass() {
+            if(currentUserBalance < vipPrice) {
+                alert(`VIP Pass ₹${vipPrice} ka hai. Pehle Wallet mein paise add karein!`);
+                switchView('walletView', 'Wallet');
+                return;
+            }
+            if(confirm(`Kya aap ₹${vipPrice} dekar VIP banna chahte hain? Aapko har match par ${vipDiscount}% discount milega! Aur DP ke saath naam badalne ka option bhi khul jayega!`)) {
+                db.ref('users/' + currentUserUid).update({
+                    balance: currentUserBalance - vipPrice,
+                    isVIP: true
+                }).then(() => {
+                    alert("🎉 Badhai ho! Ab aap VIP Member hain!");
+                });
+            }
+        }
+
+        function openUserActionPopup(action, uid) {
+            pendingUserAction = action;
+            pendingActionUid = uid;
+            
+            let title = "";
+            let text = "";
+            let btnColor = "#e74c3c";
+            
+            if(action === 'ban') {
+                title = "🚫 BAN USER";
+                text = "Are you sure you want to BAN this user? Ye player phir app login nahi kar payega.";
+            } else if(action === 'unban') {
+                title = "✅ UNBAN USER";
+                text = "Do you want to UNBAN this user?";
+                btnColor = "#2ecc71";
+            } else if(action === 'delete') {
+                title = "🗑️ DELETE USER";
+                text = "⚠️ WARNING: Kya aap sach mein is user ko hamesha ke liye DELETE karna chahte hain? Iska data aur balance sab mit jayega!";
+            }
+
+            document.getElementById('userActionTitle').innerText = title;
+            document.getElementById('userActionTitle').style.color = btnColor;
+            document.getElementById('userActionText').innerText = text;
+            
+            document.getElementById('userActionConfirmBtn').style.background = btnColor;
+            document.getElementById('userActionBox').style.borderTopColor = btnColor;
+            
+            document.getElementById('userActionConfirmOverlay').style.display = 'flex';
+        }
+
+        function closeUserActionPopup() {
+            pendingUserAction = null;
+            pendingActionUid = null;
+            document.getElementById('userActionConfirmOverlay').style.display = 'none';
+        }
+
+        function confirmUserAction() {
+            if(!pendingActionUid || !pendingUserAction) return;
+
+            if(pendingUserAction === 'ban') {
+                db.ref('users/' + pendingActionUid + '/banned').set(true).then(() => {
+                    alert("User Banned!");
+                    closeUserActionPopup();
+                });
+            } else if(pendingUserAction === 'unban') {
+                db.ref('users/' + pendingActionUid + '/banned').set(false).then(() => {
+                    alert("User Unbanned!");
+                    closeUserActionPopup();
+                });
+            } else if(pendingUserAction === 'delete') {
+                db.ref('users/' + pendingActionUid).remove().then(() => {
+                    alert("✅ User hamesha ke liye Delete ho gaya!");
+                    closeUserActionPopup();
+                }).catch(err => {
+                    alert("Error deleting user: " + err.message);
+                    closeUserActionPopup();
+                });
+            }
+        }
+
+        function submitSupportTicket() {
+            let msg = document.getElementById('userTicketMsg').value.trim();
+            if(!msg) { 
+                alert("Please type your problem first!"); 
+                return; 
+            }
+
+            document.getElementById('supportLoader').style.display = 'block';
+            db.ref('support_tickets').push({
+                uid: currentUserUid,
+                name: currentUserName,
+                message: msg,
+                status: 'open',
+                date: new Date().toLocaleString()
+            }).then(() => {
+                document.getElementById('supportLoader').style.display = 'none';
+                document.getElementById('userTicketMsg').value = '';
+                alert("✅ Message sent to Admin! Wait for reply.");
+            });
+        }
+
+        // --- NEW SUPPORT TICKET BADGE LOGIC (White on Black for Owner) ---
+        function loadUserSupportTickets() {
+            const list = document.getElementById('userTicketsList');
+            db.ref('support_tickets').orderByChild('uid').equalTo(currentUserUid).on('value', snap => {
+                list.innerHTML = ''; 
+                let tickets = [];
+                
+                snap.forEach(child => { 
+                    tickets.push(child.val()); 
+                });
+                
+                if(tickets.length === 0) { 
+                    list.innerHTML = '<p style="color:#888; text-align:center;">No tickets found.</p>'; 
+                    return; 
+                }
+                
+                tickets.reverse().forEach(t => {
+                    let stat = t.status === 'open' ? '⏳ Pending Reply' : '✅ Closed'; 
+                    let statColor = t.status === 'open' ? '#f39c12' : '#2ecc71';
+                    
+                    let headerText = "";
+                    let boxColor = "#f4f9fd"; 
+                    let borderColor = "#3498db"; 
+                    
+                    if (t.repliedByRole === 'owner') {
+                        headerText = '<span style="background: #000; color: #ffffff; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 1px;">👑 OWNER</span>';
+                        boxColor = "#fdfdfd";
+                        borderColor = "#000";
+                    } else if (t.repliedByRole === 'admin' || t.reply) {
+                        headerText = 'Support Team <span style="color: #0056b3; background: #e3f2fd; border: 1px solid #3498db; padding: 3px 8px; border-radius: 4px; font-size: 10px; margin-left: 8px; font-weight: bold;">🛡️ ADMIN</span>';
+                    }
+
+                    let replyHtml = t.reply ? `
+                        <div style="background: ${boxColor}; border-left: 4px solid ${borderColor}; padding: 12px; border-radius: 6px; margin-top: 10px;">
+                            <strong style="display:flex; align-items:center; font-size: 13px; color: #333;">
+                                ${headerText}
+                            </strong>
+                            <div style="margin-top: 8px; font-size: 13px; color: #444; line-height: 1.5;">${t.reply}</div>
+                        </div>` : '';
+                        
+                    list.innerHTML += `
+                        <div class="ticket-box" style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                            <p style="font-size:12px; color:${statColor}; font-weight:bold; margin-bottom:8px;">Status: ${stat}</p>
+                            <div style="background: #f1f1f1; padding: 10px; border-radius: 6px; font-size: 13px; color: #333;">
+                                <strong style="color: #555;">You:</strong> ${t.message}
+                            </div>
+                            ${replyHtml}
+                            <p style="font-size:11px; color:#aaa; margin-top:10px;">${t.date}</p>
+                        </div>`;
+                });
+            });
+        }
+
+        function openAdminSupport() {
+            document.getElementById('adminMapsView').style.display = 'none';
+            document.getElementById('adminMapDetailsView').style.display = 'none';
+            document.getElementById('adminWalletRequestsView').style.display = 'none';
+            document.getElementById('adminUsersView').style.display = 'none';
+            document.getElementById('adminProfileView').style.display = 'none';
+            
+            document.getElementById('adminSupportView').style.display = 'block';
+            
+            const list = document.getElementById('adminSupportList');
+            
+            db.ref('support_tickets').on('value', snap => {
+                list.innerHTML = '';
+                let tickets = [];
+                
+                snap.forEach(child => { 
+                    let t = child.val();
+                    t.key = child.key;
+                    tickets.push(t); 
+                });
+                
+                let openTickets = tickets.filter(t => t.status === 'open').reverse();
+                
+                if(openTickets.length === 0) {
+                    list.innerHTML = '<p style="text-align:center; color:#888;">No pending requests! 🎉</p>';
+                    return;
+                }
+
+                openTickets.forEach(t => {
+                    list.innerHTML += `
+                        <div class="admin-card">
+                            <h4 style="color:#333; margin-bottom:5px;">👤 ${t.name} <span style="font-size:10px; color:#888;">(${t.uid})</span></h4>
+                            <p style="font-size:14px; background:#f9f9f9; padding:10px; border-radius:5px; border:1px solid #eee; margin-bottom:10px;">${t.message}</p>
+                            
+                            <textarea id="reply_${t.key}" placeholder="Type reply here..." style="min-height: 60px; margin-bottom:10px; padding:10px; font-size:14px;"></textarea>
+                            <button class="primary-btn" style="background:#2ecc71; color:white; margin-top:0; padding:10px;" onclick="replySupportTicket('${t.key}')">✅ REPLY & CLOSE</button>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        function replySupportTicket(key) {
+            let repMsg = document.getElementById('reply_' + key).value.trim();
+            if(!repMsg) { 
+                alert("Reply khali nahi chhod sakte!"); 
+                return; 
+            }
+            
+            db.ref('support_tickets/' + key).update({
+                status: 'closed',
+                reply: repMsg,
+                repliedByRole: isOwner ? 'owner' : 'admin' 
+            }).then(() => {
+                alert("Reply Sent & Ticket Closed!");
+            });
+        }
+
+        function sendFlashAlert() {
+            let msg = document.getElementById('adminFlashMsg').value.trim();
+            if(!msg) { 
+                alert("Please enter a message!"); 
+                return; 
+            }
+            
+            db.ref('settings/flashAlert').set({
+                message: msg,
+                id: Date.now()
+            }).then(() => {
+                alert("🚨 Flash Alert sent to all players instantly!");
+                document.getElementById('adminFlashMsg').value = '';
+            });
+        }
+
+        function closeFlashAlert() {
+            let alertId = parseInt(document.getElementById('flashAlertOverlay').dataset.alertId);
+            localStorage.setItem('lastSeenAlert', alertId);
+            lastSeenAlert = alertId;
+            document.getElementById('flashAlertOverlay').style.display = 'none';
+        }
+
+        // --- BANNER LOGIC FOR CLICKABLE LINKS ---
+        function renderBanners(bannersObj) {
+            const container = document.getElementById('bannerSlider');
+            const wrapper = document.getElementById('sliderWrapper');
+            const dotsContainer = document.getElementById('sliderDots');
+            
+            wrapper.innerHTML = '';
+            dotsContainer.innerHTML = '';
+            
+            if (!bannersObj || Object.keys(bannersObj).length === 0) { 
+                container.style.display = 'none'; 
+                return; 
+            }
+            
+            container.style.display = 'block';
+            
+            const keys = Object.keys(bannersObj);
+            
+            keys.forEach((key, index) => {
+                let bData = bannersObj[key];
+                
+                let imgSrc = typeof bData === 'string' ? bData : bData.image;
+                let linkUrl = typeof bData === 'string' ? '' : (bData.link || '');
+                
+                let clickAction = linkUrl ? `onclick="window.open('${linkUrl}', '_blank')"` : "";
+                let cursorStyle = linkUrl ? "cursor: pointer;" : "";
+
+                wrapper.innerHTML += `<img src="${imgSrc}" class="slide" style="${cursorStyle}" ${clickAction} onerror="this.src='https://via.placeholder.com/400x160?text=Banner+Error'">`;
+                dotsContainer.innerHTML += `<div class="dot ${index===0 ? 'active':''}"></div>`;
+            });
+
+            clearInterval(bannerSlideInterval);
+            if(keys.length > 1) {
+                let currentIndex = 0;
+                bannerSlideInterval = setInterval(() => {
+                    currentIndex = (currentIndex + 1) % keys.length;
+                    wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
+                    
+                    const dots = dotsContainer.children;
+                    for(let i=0; i<dots.length; i++) {
+                        dots[i].className = i === currentIndex ? 'dot active' : 'dot';
+                    }
+                }, 3000);
+            } else {
+                wrapper.style.transform = `translateX(0%)`;
+            }
+        }
+
+        function uploadBanner() {
+            const fileInput = document.getElementById('adminBannerUpload');
+            const linkInput = document.getElementById('adminBannerLink').value.trim();
+            
+            if (fileInput.files.length === 0) { 
+                alert("Pehle Banner image select karein!"); 
+                return; 
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                db.ref('settings/banners').push({
+                    image: event.target.result,
+                    link: linkInput
+                }).then(() => {
+                    alert("✅ Banner Successfully Added!");
+                    document.getElementById('adminBannerUpload').value = '';
+                    document.getElementById('adminBannerLink').value = '';
+                    document.getElementById('bannerUploadText').innerText = '📷 Select Banner Image';
+                    document.getElementById('bannerUploadText').style.color = '#555';
+                });
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        }
+
+        function renderAdminBannerList(bannersObj) {
+            const list = document.getElementById('adminBannersList');
+            list.innerHTML = '';
+            
+            if(!bannersObj) return;
+            
+            const keys = Object.keys(bannersObj);
+            
+            keys.forEach((key, i) => {
+                let bData = bannersObj[key];
+                let imgSrc = typeof bData === 'string' ? bData : bData.image;
+                let linkText = typeof bData === 'string' || !bData.link ? 'No Link' : '🔗 Link Attached';
+
+                list.innerHTML += `
+                    <div class="admin-banner-item">
+                        <span style="font-weight:bold; color:#555;">#${i+1}</span>
+                        <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/100x50?text=Error'">
+                        <span style="font-size:10px; color:#1abc9c; font-weight:bold;">${linkText}</span>
+                        <button class="danger-btn" style="width:auto; margin:0; padding:5px 10px;" onclick="deleteBanner('${key}')">🗑️</button>
+                    </div>`;
+            });
+        }
+
+        function deleteBanner(key) {
+            if(confirm("Delete this banner?")) {
+                db.ref('settings/banners/' + key).remove();
+            }
+        }
+
+        function updateBonusBoxVisibility() {
+            if(!currentUserUid || isAdmin) return;
+            
+            const today = new Date().toLocaleDateString();
+            if(dailyBonusAmount > 0 && userLastCheckIn !== today) {
+                document.getElementById('dailyBonusBox').style.display = 'block';
+            } else if(document.getElementById('dailyBonusBox')) {
+                document.getElementById('dailyBonusBox').style.display = 'none';
+            }
+        }
+
+        function claimDailyBonus() {
+            if(!currentUserUid || dailyBonusAmount <= 0) return;
+
+            const today = new Date().toLocaleDateString(); 
+            const userRef = db.ref('users/' + currentUserUid);
+            
+            document.getElementById('dailyBonusBox').style.display = 'none'; 
+
+            userRef.once('value').then(snap => {
+                const uData = snap.val();
+                
+                if(uData.lastCheckIn === today) {
+                    alert("Aapne aaj ka bonus pehle hi le liya hai! 🎁 Kal wapas aaiye.");
+                } else {
+                    let currentBal = uData.balance || 0;
+                    userRef.update({
+                        balance: currentBal + dailyBonusAmount,
+                        lastCheckIn: today
+                    }).then(() => {
+                        alert(`🎉 Mubaarak ho! Aapko ₹${dailyBonusAmount} Daily Bonus mil gaya hai!`);
+                    });
+                }
+            });
+        }
+
+        function getYouTubeID(url) {
+            let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|live\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            let match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function openYouTubeLive() {
+            if(youtubeLiveUrl) {
+                let videoId = getYouTubeID(youtubeLiveUrl);
+                let finalUrl = youtubeLiveUrl;
+
+                if(videoId) {
+                    finalUrl = "https://www.youtube.com/embed/" + videoId + "?autoplay=1";
+                } else if (!finalUrl.startsWith("http")) {
+                    finalUrl = "https://" + finalUrl;
+                }
+
+                document.getElementById('youtubeIframe').src = finalUrl;
+                switchView('liveStreamView', 'Live Match');
+            }
+        }
+
+        function openHelp() { 
+            if(!adminPhone) return;
+            
+            let link = adminPhone.trim();
+            if(link.startsWith("http") || link.includes("chat.whatsapp") || link.includes("wa.me") || link.includes(".com")) {
+                if(!link.startsWith("http")) link = "https://" + link;
+                window.open(link, '_blank');
+            } else {
+                let num = link.replace(/[^0-9]/g, '');
+                window.open('https://wa.me/' + num, '_blank'); 
+            }
+        }
+        
+        function openInsta() { 
+            if(!adminInsta) return;
+            
+            let link = adminInsta.trim();
+            if(link.startsWith("http") || link.includes("instagram") || link.includes(".com")) {
+                if(!link.startsWith("http")) link = "https://" + link;
+                window.open(link, '_blank');
+            } else {
+                let instaId = link.replace('@', '');
+                window.open('https://instagram.com/' + instaId, '_blank'); 
+            }
+        }
+
+        function updateFileName(inputId, textId) {
+            const input = document.getElementById(inputId);
+            const textElement = document.getElementById(textId);
+            
+            if (input.files && input.files.length > 0) {
+                textElement.innerText = "✅ " + input.files[0].name;
+                textElement.style.color = "#2ecc71"; 
+            } else {
+                textElement.innerText = "📷 Select Image";
+                textElement.style.color = "#555";
+            }
+        }
+
+        function switchAuthMode(mode) {
+            authMode = mode;
+            
+            document.getElementById('tabLogin').classList.remove('active');
+            document.getElementById('tabSignup').classList.remove('active');
+            
+            if(mode === 'login') {
+                document.getElementById('tabLogin').classList.add('active');
+                document.getElementById('playerName').style.display = 'none';
+                document.getElementById('authBtn').innerText = 'LOG IN';
+            } else {
+                document.getElementById('tabSignup').classList.add('active');
+                document.getElementById('playerName').style.display = 'block';
+                document.getElementById('authBtn').innerText = 'SIGN UP';
+            }
+        }
+
+        function handleAuth() {
+            const uid = document.getElementById('playerUid').value.trim();
+            const pass = document.getElementById('playerPass').value.trim();
+            const name = document.getElementById('playerName').value.trim();
+            
+            if (!uid || !pass) { 
+                alert("UID and Password required!"); 
+                return; 
+            }
+
+            // Owner Check
+            if (uid === adminUid) {
+                if (pass === adminPass) {
+                    localStorage.setItem('currentUserUid', adminUid);
+                    localStorage.setItem('currentUserName', 'Owner Admin');
+                    localStorage.setItem('isAdmin', 'true');
+                    
+                    currentUserUid = adminUid;
+                    isAdmin = true;
+                    isOwner = true;
+                    
+                    document.getElementById('playerUid').value = '';
+                    document.getElementById('playerPass').value = '';
+                    
+                    showAdminApp();
+                } else { 
+                    alert("Incorrect Password!"); 
+                }
+                return; 
+            }
+
+            // Normal Auth
+            document.getElementById('authLoader').style.display = 'block';
+            const userRef = db.ref('users/' + uid);
+            
+            userRef.once('value').then((snapshot) => {
+                document.getElementById('authLoader').style.display = 'none';
+                const userData = snapshot.val();
+
+                if (authMode === 'signup') {
+                    if (!name) { 
+                        alert("Please enter Player Name!"); 
+                        return; 
+                    }
+                    if (userData) { 
+                        alert("UID already registered!"); 
+                        return; 
+                    }
+                    userRef.set({ 
+                        name: name, 
+                        password: pass, 
+                        balance: 0, 
+                        banned: false, 
+                        isVIP: false, 
+                        avatar: "" 
+                    }).then(() => {
+                        saveSession(uid, name);
+                    });
+                } else {
+                    if (!userData) { 
+                        alert("UID not found!"); 
+                        return; 
+                    }
+                    if (userData.password !== pass) { 
+                        alert("Incorrect Password!"); 
+                        return; 
+                    }
+                    if (userData.banned) { 
+                        alert("🚫 You have been banned by the Admin."); 
+                        return; 
+                    }
+                    saveSession(uid, userData.name);
+                }
+            }).catch(err => {
+                document.getElementById('authLoader').style.display = 'none';
+                alert("Database Error.");
+            });
+        }
+
+        function saveSession(uid, name) {
+            localStorage.setItem('currentUserUid', uid);
+            localStorage.setItem('currentUserName', name);
+            currentUserUid = uid;
+            currentUserName = name;
+            
+            // Check Sub-Admin
+            if (subAdminsList[uid]) {
+                isAdmin = true;
+                isOwner = false;
+                localStorage.setItem('isAdmin', 'true');
+            } else {
+                isAdmin = false;
+                isOwner = false;
+                localStorage.setItem('isAdmin', 'false');
+            }
+            
+            document.getElementById('playerUid').value = '';
+            document.getElementById('playerPass').value = '';
+            
+            if(localStorage.getItem('rulesAccepted_' + uid) === 'true') {
+                showMainApp();
+            } else {
+                showRulesScreen();
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            
+            currentUserUid = "";
+            currentUserName = "";
+            currentUserAvatar = "";
+            isAdmin = false;
+            isOwner = false;
+            isVIP = false;
+            
+            document.getElementById('playerUid').value = '';
+            document.getElementById('playerPass').value = '';
+            
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('adminApp').style.display = 'none';
+            document.getElementById('rulesScreen').style.display = 'none';
+            document.getElementById('roomPopupOverlay').style.display = 'none';
+            document.getElementById('liveStreamBanner').style.display = 'none';
+            document.getElementById('flashAlertOverlay').style.display = 'none'; 
+            document.getElementById('vipBuyBanner').style.display = 'none';
+            document.getElementById('profileEditOverlay').style.display = 'none';
+            
+            if (document.getElementById('paymentGatewayView')) {
+                document.getElementById('paymentGatewayView').style.display = 'none';
+            }
+
+            document.getElementById('userAvatarImg').src = '';
+            document.getElementById('userAvatarImg').style.display = 'none';
+            document.getElementById('userAvatarEmoji').style.display = 'inline-block';
+            
+            if(document.getElementById('youtubeIframe')) {
+                document.getElementById('youtubeIframe').src = '';
+            }
+            
+            document.getElementById('authScreen').style.display = 'block';
+            switchAuthMode('login');
+        }
+
+        function showRulesScreen() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('adminApp').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('rulesScreen').style.display = 'flex';
+        }
+
+        function acceptRules() {
+            localStorage.setItem('rulesAccepted_' + currentUserUid, 'true');
+            document.getElementById('rulesScreen').style.display = 'none';
+            showMainApp();
+        }
+
+        function showMainApp() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('adminApp').style.display = 'none';
+            document.getElementById('rulesScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            
+            requestNotificationPermission();
+
+            if(document.getElementById('displayNm')) {
+                document.getElementById('displayNm').innerText = currentUserName;
+            }
+            if(document.getElementById('displayUid')) {
+                document.getElementById('displayUid').innerText = currentUserUid;
+            }
+            
+            if(isAdmin && !isOwner) {
+                document.getElementById('adminPanelBtn').style.display = 'block';
+            } else {
+                document.getElementById('adminPanelBtn').style.display = 'none';
+            }
+            
+            if(youtubeLiveUrl && youtubeLiveUrl.trim() !== "" && youtubeLiveUrl.includes(".")) {
+                document.getElementById('liveStreamBanner').style.display = 'block';
+            } else {
+                document.getElementById('liveStreamBanner').style.display = 'none';
+            }
+
+            updateSocialIconsUI();
+            updateBonusBoxVisibility(); 
+            listenToUserBalance(); 
+            
+            switchView('dashboardView', 'Dashboard');
+            setupPopupListeners();
+        }
+
+        function setupPopupListeners() {
+            db.ref('payments').on('value', (snapshot) => {
+                currentMapCounts = {};
+                userActiveMatches = {};
+                
+                snapshot.forEach((child) => {
+                    const pay = child.val();
+                    if (!pay.archived) { 
+                        currentMapCounts[pay.tourney] = (currentMapCounts[pay.tourney] || 0) + 1;
+                        if (pay.uid === currentUserUid) {
+                            userActiveMatches[pay.tourney] = true;
+                        }
+                    }
+                });
+                renderPlayerMaps();
+                checkAndShowPopups();
+            });
+
+            db.ref('rooms').on('value', (snap) => {
+                currentRoomsData = snap.val() || {};
+                checkAndShowPopups();
+                
+                for (let mapName in notifiedRooms) {
+                    if (!currentRoomsData[mapName] || !currentRoomsData[mapName].rId) {
+                        delete notifiedRooms[mapName];
+                    }
+                }
+            });
+        }
+
+        function checkAndShowPopups() {
+            if(!currentUserUid || isOwner) return; 
+            
+            for (let mapName in currentRoomsData) {
+                let room = currentRoomsData[mapName];
+                
+                if (userActiveMatches[mapName] && room.rId && room.rId !== notifiedRooms[mapName]) {
+                    showRoomPopup(mapName, room.rId, room.rPass);
+                    notifiedRooms[mapName] = room.rId;
+                }
+            }
+        }
+
+        function showRoomPopup(mapName, rId, rPass) {
+            document.getElementById('popupMapName').innerText = "Map: " + mapName;
+            document.getElementById('popupRoomId').innerText = rId;
+            document.getElementById('popupRoomPass').innerText = rPass;
+            document.getElementById('roomPopupOverlay').style.display = 'flex';
+            
+            if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            
+            sendBrowserNotification("🔔 Room is Ready!", `${mapName} room is created. Open app to check ID & Pass!`);
+        }
+
+        // --- LEADERBOARD & PROFILE TILT ---
+        function loadLeaderboard() {
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = '<p style="text-align:center; color:#888;">Loading Leaderboard... ⏳</p>';
+            
+            db.ref('users').once('value').then(snap => {
+                let usersArr = [];
+                snap.forEach(child => {
+                    let u = child.val();
+                    u.uid = child.key; 
+                    if(u.uid !== adminUid && !u.banned) {
+                        usersArr.push(u);
+                    }
+                });
+                
+                usersArr.sort((a, b) => (b.totalWon || 0) - (a.totalWon || 0)); 
+                
+                list.innerHTML = '';
+                if(usersArr.length === 0) {
+                    list.innerHTML = '<p style="text-align:center; color:#888;">No players found.</p>';
+                    return;
+                }
+                
+                usersArr.forEach((u, index) => {
+                    let rankIcon = `#${index + 1}`;
+                    let color = "#333";
+                    let bg = "#ffffff";
+                    
+                    if(index === 0) { rankIcon = "🥇"; color = "#f39c12"; bg = "#fffdf0"; } 
+                    else if(index === 1) { rankIcon = "🥈"; color = "#7f8c8d"; bg = "#f8f9f9"; } 
+                    else if(index === 2) { rankIcon = "🥉"; color = "#d35400"; bg = "#fdfbf7"; } 
+                    
+                    let vipStar = u.isVIP ? ' <span class="t-badge" title="Tournament Pro VIP">T</span>' : '';
+
+                    list.innerHTML += `
+                        <div class="admin-card" onclick="openPublicProfile('${u.uid}')" style="display:flex; justify-content:space-between; align-items:center; background:${bg}; padding:15px; margin-bottom:10px; border: 1px solid #eee; cursor: pointer; transition: transform 0.2s;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <span style="font-size:24px; font-weight:bold; color:${color}; width: 35px; text-align:center;">${rankIcon}</span>
+                                <span style="font-weight:bold; font-size:16px; color:#333;">${u.name}${vipStar}</span>
+                            </div>
+                            <span style="color:#2ecc71; font-weight:bold; font-size:16px;">₹${u.totalWon || 0}</span>
+                        </div>`;
+                });
+            }).catch(err => {
+                list.innerHTML = '<p style="text-align:center; color:#e74c3c;">Failed to load leaderboard.</p>';
+            });
+        }
+
+        function switchView(viewId, title) {
+            document.getElementById('dashboardView').style.display = 'none';
+            document.getElementById('walletView').style.display = 'none';
+            document.getElementById('paymentView').style.display = 'none';
+            document.getElementById('historyView').style.display = 'none';
+            
+            if(document.getElementById('leaderboardView')) document.getElementById('leaderboardView').style.display = 'none';
+            if(document.getElementById('liveStreamView')) document.getElementById('liveStreamView').style.display = 'none';
+            if(document.getElementById('supportView')) document.getElementById('supportView').style.display = 'none';
+            if(document.getElementById('paymentGatewayView')) document.getElementById('paymentGatewayView').style.display = 'none';
+            
+            if(viewId !== 'liveStreamView' && document.getElementById('youtubeIframe')) {
+                document.getElementById('youtubeIframe').src = '';
+            }
+
+            document.getElementById(viewId).style.display = 'block';
+            document.getElementById('headerTitle').innerText = title;
+
+            if (viewId === 'historyView') loadMatchHistory();
+            if (viewId === 'walletView') loadWalletHistory();
+            if (viewId === 'dashboardView') renderPlayerMaps();
+            if (viewId === 'leaderboardView') loadLeaderboard(); 
+            if (viewId === 'supportView') loadUserSupportTickets(); 
+        }
+
+        function switchWalletTab(tab) {
+            document.getElementById('tabAddMoney').classList.remove('active');
+            document.getElementById('tabWithdraw').classList.remove('active');
+            document.getElementById('addMoneySection').style.display = 'none';
+            document.getElementById('withdrawSection').style.display = 'none';
+
+            if(tab === 'add') {
+                document.getElementById('tabAddMoney').classList.add('active');
+                document.getElementById('addMoneySection').style.display = 'block';
+            } else {
+                document.getElementById('tabWithdraw').classList.add('active');
+                document.getElementById('withdrawSection').style.display = 'block';
+            }
+        }
+
+        function listenToUserBalance() {
+            db.ref('users/' + currentUserUid).on('value', (snap) => {
+                let uData = snap.val() || {};
+                
+                currentUserBalance = uData.balance || 0;
+                userLastCheckIn = uData.lastCheckIn || ""; 
+                let totalWon = uData.totalWon || 0; 
+                isVIP = uData.isVIP || false;
+                
+                currentUserAvatar = uData.avatar || "";
+                
+                if(currentUserAvatar) {
+                    document.getElementById('userAvatarImg').src = currentUserAvatar;
+                    document.getElementById('userAvatarImg').style.display = 'block';
+                    document.getElementById('userAvatarEmoji').style.display = 'none';
+                } else {
+                    document.getElementById('userAvatarImg').style.display = 'none';
+                    document.getElementById('userAvatarEmoji').style.display = 'inline-block';
+                }
+
+                if (currentUserName !== uData.name && uData.name) {
+                    currentUserName = uData.name;
+                    localStorage.setItem('currentUserName', currentUserName);
+                }
+                
+                document.getElementById('topBalance').innerText = currentUserBalance;
+                document.getElementById('mainWalletBalance').innerText = currentUserBalance;
+                document.getElementById('payWalletBalance').innerText = currentUserBalance;
+                
+                if(document.getElementById('statUserBalance')) {
+                    document.getElementById('statUserBalance').innerText = "₹" + currentUserBalance;
+                }
+                if(document.getElementById('statUserWon')) {
+                    document.getElementById('statUserWon').innerText = "₹" + totalWon; 
+                }
+                
+                if(isVIP) {
+                    if(document.getElementById('vipBuyBanner')) {
+                        document.getElementById('vipBuyBanner').style.display = 'none';
+                    }
+                    if(document.getElementById('displayNm')) {
+                        document.getElementById('displayNm').innerHTML = currentUserName + ' <span class="t-badge" title="Tournament Pro VIP">T</span>';
+                    }
+                } else {
+                    if(document.getElementById('vipBuyBanner') && !isOwner) {
+                        document.getElementById('vipBuyBanner').style.display = 'block';
+                    }
+                    if(document.getElementById('displayNm')) {
+                        document.getElementById('displayNm').innerText = currentUserName;
+                    }
+                }
+
+                updateBonusBoxVisibility(); 
+            });
+        }
+
+        function openPaymentGateway() {
+            const amount = parseInt(document.getElementById('rechargeAmount').value);
+            
+            if (!amount || amount <= 0) { 
+                alert("Please enter a valid amount first!"); 
+                return; 
+            }
+            
+            pendingRechargeAmount = amount;
+            
+            document.getElementById('pgPlayerName').innerText = currentUserName;
+            document.getElementById('pgPlayerUid').innerText = currentUserUid;
+            document.getElementById('pgAmount').innerText = amount;
+            
+            document.getElementById('walletView').style.display = 'none';
+            document.getElementById('paymentGatewayView').style.display = 'block';
+            document.getElementById('headerTitle').innerText = "Checkout";
+        }
+
+        function cancelPayment() {
+            document.getElementById('paymentGatewayView').style.display = 'none';
+            document.getElementById('walletView').style.display = 'block';
+            document.getElementById('headerTitle').innerText = "Wallet";
+        }
+
+        function triggerUPI(appChoice) {
+            const upiId = adminUpiId || "9416196341@fam"; 
+            const merchantName = "Tournament App";
+            const amount = pendingRechargeAmount;
+            
+            const queryData = `pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR`;
+            let deepLink = "";
+
+            if (appChoice === 'gpay') {
+                deepLink = `tez://upi/pay?${queryData}`;
+            } else if (appChoice === 'phonepe') {
+                deepLink = `phonepe://pay?${queryData}`;
+            } else if (appChoice === 'paytm') {
+                deepLink = `paytmmp://pay?${queryData}`;
+            } else {
+                deepLink = `upi://pay?${queryData}`; 
+            }
+            
+            window.location.href = deepLink;
+            
+            setTimeout(() => {
+                alert("Payment successful hone ke baad, please wapas aakar payment ka SCREENSHOT upload zaroor karein taaki balance add ho sake!");
+                cancelPayment();
+            }, 1500);
+        }
+
+        function submitWalletRecharge() {
+            const amount = parseInt(document.getElementById('rechargeAmount').value);
+            const fileInput = document.getElementById('rechargeImage');
+
+            if (!amount || amount <= 0) { 
+                alert("Enter valid amount!"); 
+                return; 
+            }
+            if (fileInput.files.length === 0) { 
+                alert("Upload screenshot!"); 
+                return; 
+            }
+
+            document.getElementById('walletLoader').style.display = 'block';
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                db.ref('wallet_requests').push({
+                    uid: currentUserUid,
+                    name: currentUserName,
+                    type: "add",
+                    amount: amount,
+                    image: event.target.result,
+                    date: new Date().toLocaleString(),
+                    status: "pending" 
+                }).then(() => {
+                    document.getElementById('walletLoader').style.display = 'none';
+                    document.getElementById('rechargeAmount').value = '';
+                    document.getElementById('rechargeImage').value = '';
+                    document.getElementById('rechargeImageText').innerText = "UPLOAD SCREENSHOT";
+                    document.getElementById('rechargeImageText').style.color = "#555";
+                    alert("Request Submitted!");
+                });
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        }
+
+        function submitWithdrawal() {
+            const amount = parseInt(document.getElementById('withdrawAmount').value);
+            const upiId = document.getElementById('withdrawUpi').value.trim();
+            const qrFileInput = document.getElementById('withdrawQrImage');
+
+            if (!amount || amount <= 0) { 
+                alert("Enter valid amount!"); 
+                return; 
+            }
+            
+            if (amount < minWithdrawAmount) {
+                alert(`Minimum withdrawal limit is ₹${minWithdrawAmount}. Kripya isse zyada amount dalein.`);
+                return;
+            }
+
+            if (!upiId && qrFileInput.files.length === 0) { 
+                alert("Enter UPI ID OR Upload QR!"); 
+                return; 
+            }
+            if (amount > currentUserBalance) { 
+                document.getElementById('withdrawErrorMsg').style.display = 'block';
+                return; 
+            }
+            
+            document.getElementById('withdrawErrorMsg').style.display = 'none';
+            document.getElementById('withdrawLoader').style.display = 'block';
+
+            const newBal = currentUserBalance - amount;
+            
+            const saveReq = (qrData) => {
+                db.ref('users/' + currentUserUid).update({ balance: newBal }).then(() => {
+                    db.ref('wallet_requests').push({
+                        uid: currentUserUid,
+                        name: currentUserName,
+                        type: "withdraw",
+                        amount: amount,
+                        upi: upiId || "QR Code Provided",
+                        withdrawQr: qrData || "",
+                        date: new Date().toLocaleString(),
+                        status: "pending" 
+                    }).then(() => {
+                        document.getElementById('withdrawLoader').style.display = 'none';
+                        document.getElementById('withdrawAmount').value = '';
+                        document.getElementById('withdrawUpi').value = '';
+                        document.getElementById('withdrawQrImage').value = '';
+                        document.getElementById('withdrawQrText').innerText = "UPLOAD YOUR QR CODE";
+                        document.getElementById('withdrawQrText').style.color = "#555";
+                        alert("Withdrawal Requested!");
+                    });
+                });
+            };
+
+            if (qrFileInput.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(e) { 
+                    saveReq(e.target.result); 
+                };
+                reader.readAsDataURL(qrFileInput.files[0]);
+            } else { 
+                saveReq(""); 
+            }
+        }
+
+        function loadWalletHistory() {
+            const list = document.getElementById('walletHistoryList');
+            db.ref('wallet_requests').orderByChild('uid').equalTo(currentUserUid).on('value', (snapshot) => {
+                list.innerHTML = '';
+                const reqs = [];
+                
+                snapshot.forEach((child) => { 
+                    reqs.push(child.val()); 
+                });
+                
+                if (reqs.length === 0) { 
+                    list.innerHTML = '<p style="color:#888; text-align:center;">No transactions yet.</p>'; 
+                    return; 
+                }
+
+                reqs.reverse().forEach(item => {
+                    let st = item.status === 'approved' ? '<span style="color:#2ecc71;">✅ Success</span>' : 
+                             item.status === 'rejected' ? '<span style="color:#e74c3c;">❌ Rejected</span>' : 
+                             '<span style="color:#f39c12;">⏳ Processing</span>';
+                    
+                    let title = item.type === "add" ? `➕ Added ₹${item.amount}` : `➖ Withdrawn ₹${item.amount}`;
+                    let titleColor = item.type === "add" ? '#2ecc71' : '#e74c3c';
+                    
+                    let reasonHtml = (item.status === 'rejected' && item.rejectReason) ? 
+                                     `<p style="color:#e74c3c; font-size:11px; margin-top:5px; background:#fdebd0; padding:5px; border-radius:4px;"><strong>Reason:</strong> ${item.rejectReason}</p>` : '';
+
+                    list.innerHTML += `
+                        <div class="history-item" style="padding: 10px;">
+                            <p><strong style="color: ${titleColor}">${title}</strong></p>
+                            <p style="margin-top: 5px; font-size: 13px;">Status: ${st}</p>
+                            ${reasonHtml}
+                            <p style="font-size:11px; color:#888; margin-top: 5px;">${item.date}</p>
+                        </div>`;
+                });
+            });
+        }
+
+        function renderPlayerMaps() {
+            const container = document.getElementById('playerMapContainer');
+            if (!container || !mapsData) return;
+            
+            container.innerHTML = '';
+            
+            for (const mapName in mapsData) {
+                const m = mapsData[mapName];
+                const count = currentMapCounts[mapName] || 0;
+                
+                const isAvail = m.available !== false; 
+                const mapLimit = m.limit || 48; 
+                const isFull = count >= mapLimit; 
+
+                let clickAction = "";
+                let cardClass = "card";
+                let badgeHtml = "";
+                let tagHtml = "";
+                
+                let displayFee = m.fee;
+                if(isVIP && vipDiscount > 0) {
+                    let cutFee = Math.floor(m.fee - (m.fee * vipDiscount / 100));
+                    displayFee = `<del style="color:#f1c40f;">₹${m.fee}</del> ₹${cutFee}`;
+                } else {
+                    displayFee = `₹${m.fee}`;
+                }
+
+                if (!isAvail) {
+                    cardClass = "card disabled";
+                    badgeHtml = `<div class="fee-badge" style="background:#7f8c8d;">CLOSED</div>`;
+                    tagHtml = `<div class="avail-tag" style="display:block; background:rgba(0,0,0,0.8);">NOT AVAILABLE</div>`;
+                    
+                    container.innerHTML += `
+                    <div class="${cardClass}" style="opacity: 0.6; filter: grayscale(100%); pointer-events: none;">
+                        ${tagHtml}
+                        ${badgeHtml}
+                        <div class="icon">${m.icon}</div>
+                        <span>${mapName}</span>
+                        <div class="sub-text">Win: ${m.prize}<br>Time: ${m.time}</div>
+                        <div style="font-size:12px; color:#e74c3c; font-weight:bold; margin-top:8px;">Slots: ${count} / ${mapLimit}</div>
+                    </div>`;
+
+                } else if (isFull) {
+                    clickAction = `alert('Room is FULL!')`;
+                    cardClass = "card disabled";
+                    badgeHtml = `<div class="fee-badge" style="background:#333;">FULL</div>`;
+                    tagHtml = `<div class="avail-tag" style="display:block; background:rgba(231, 76, 60, 0.9);">ROOM FULL</div>`;
+                    
+                    container.innerHTML += `
+                    <div class="${cardClass}" style="opacity: 0.6; filter: grayscale(100%); cursor: not-allowed;" onclick="${clickAction}">
+                        ${tagHtml}
+                        ${badgeHtml}
+                        <div class="icon">${m.icon}</div>
+                        <span>${mapName}</span>
+                        <div class="sub-text">Win: ${m.prize}<br>Time: ${m.time}</div>
+                        <div style="font-size:12px; color:#e74c3c; font-weight:bold; margin-top:8px;">Slots: ${count} / ${mapLimit}</div>
+                    </div>`;
+
+                } else {
+                    clickAction = `openPayment('${mapName}', ${m.fee})`;
+                    badgeHtml = `<div class="fee-badge">${displayFee}</div>`;
+                    
+                    container.innerHTML += `
+                    <div class="${cardClass}" onclick="${clickAction}">
+                        ${badgeHtml}
+                        <div class="icon">${m.icon}</div>
+                        <span>${mapName}</span>
+                        <div class="sub-text">Win: ${m.prize}<br>Time: ${m.time}</div>
+                        <div style="font-size:12px; color:#1abc9c; font-weight:bold; margin-top:8px; background:#f9f9f9; padding:4px; border-radius:4px; border:1px solid #1abc9c;">Slots: ${count} / ${mapLimit}</div>
+                    </div>`;
+                }
+            }
+        }
+
+        function openPayment(tourneyName, fee) {
+            currentTourney = tourneyName;
+            
+            let finalFee = fee;
+            if(isVIP && vipDiscount > 0) {
+                finalFee = Math.floor(fee - (fee * vipDiscount / 100));
+                document.getElementById('entryFee').innerHTML = `<del style="color:#888; font-size:14px;">₹${fee}</del> ₹${finalFee} <span style="font-size:12px; color:#2ecc71;">(VIP Discount)</span>`;
+            } else {
+                document.getElementById('entryFee').innerText = `₹${fee}`;
+            }
+            
+            currentFee = finalFee;
+            document.getElementById('tourneyName').innerText = tourneyName;
+            
+            document.getElementById('specialCodeInput').value = ''; 
+            document.getElementById('roomDetails').style.display = 'none';
+            document.getElementById('comingSoonMsg').style.display = 'none';
+            document.getElementById('joinErrorMsg').style.display = 'none';
+            
+            switchView('paymentView', 'Join Match');
+        }
+
+        function joinMatchWithWallet() {
+            const mapLimit = mapsData[currentTourney].limit || 48;
+            if ((currentMapCounts[currentTourney] || 0) >= mapLimit) {
+                alert("Sorry, Room abhi full ho gaya hai!");
+                switchView('dashboardView', 'Dashboard');
+                return;
+            }
+            if (currentUserBalance < currentFee) {
+                document.getElementById('joinErrorMsg').style.display = 'block';
+                return;
+            }
+            
+            const newBalance = currentUserBalance - currentFee;
+            db.ref('users/' + currentUserUid).update({ balance: newBalance });
+
+            const specialCode = "FF" + Math.floor(100 + Math.random() * 900); 
+            
+            db.ref('payments').push({
+                uid: currentUserUid,
+                name: currentUserName,
+                tourney: currentTourney,
+                fee: currentFee,
+                date: new Date().toLocaleString(),
+                code: specialCode,
+                status: "approved" 
+            }).then(() => {
+                alert(`MATCH JOINED!\nYour Match Code: ${specialCode}`);
+                switchView('historyView', 'Profile');
+            });
+        }
+
+        function getRoomId() {
+            const inputCode = document.getElementById('specialCodeInput').value.trim();
+            if(!inputCode) { 
+                alert("Enter special code!"); 
+                return; 
+            }
+
+            db.ref('payments').orderByChild('uid').equalTo(currentUserUid).once('value').then((snapshot) => {
+                let isMatch = false;
+                snapshot.forEach((child) => {
+                    const pay = child.val();
+                    if (pay.code === inputCode && pay.tourney === currentTourney) {
+                        isMatch = true;
+                    }
+                });
+
+                if (isMatch) {
+                    db.ref('rooms/' + currentTourney).once('value').then((roomSnap) => {
+                        const roomData = roomSnap.val();
+                        if (roomData && roomData.rId) {
+                            document.getElementById('roomDetails').innerHTML = `
+                                Room ID: ${roomData.rId}<br><br>
+                                Password: ${roomData.rPass}
+                            `;
+                            document.getElementById('roomDetails').style.display = 'block';
+                            document.getElementById('comingSoonMsg').style.display = 'none';
+                        } else {
+                            document.getElementById('roomDetails').style.display = 'none';
+                            document.getElementById('comingSoonMsg').style.display = 'block';
+                        }
+                    });
+                } else { 
+                    alert("Invalid Code for this map!"); 
+                }
+            });
+        }
+
+        function loadMatchHistory() {
+            const historyList = document.getElementById('historyList');
+            db.ref('payments').orderByChild('uid').equalTo(currentUserUid).on('value', (snapshot) => {
+                historyList.innerHTML = '';
+                const payments = [];
+                let totalMatches = 0;
+
+                snapshot.forEach((child) => { 
+                    const item = child.val();
+                    item.key = child.key; 
+                    payments.push(item);
+                    totalMatches++;
+                });
+
+                if(document.getElementById('statUserMatches')) {
+                    document.getElementById('statUserMatches').innerText = totalMatches;
+                }
+
+                if (payments.length === 0) { 
+                    historyList.innerHTML = '<p style="color:#888; text-align:center;">No matches joined yet.</p>'; 
+                    return; 
+                }
+
+                payments.reverse().forEach(item => {
+                    let stat = (item.status === 'completed' || item.archived) ? '<span style="color:#888; font-weight:bold;">🏁 Finished</span>' : '<span style="color:#2ecc71; font-weight:bold;">✅ Active</span>';
+                    
+                    historyList.innerHTML += `
+                        <div class="history-item">
+                            <p style="color: #333;"><strong>Map:</strong> ${item.tourney}</p>
+                            <p style="color: #555; font-size: 13px; margin-top: 5px;">Paid: ₹${item.fee} | ${stat}</p>
+                            <p style="color: #333; margin-top: 5px;"><strong>Your Code:</strong> <span style="color:#d35400; font-weight:bold; font-size:18px;">${item.code}</span></p>
+                        </div>`;
+                });
+            });
+        }
+
+        // --- ADMIN / OWNER LOGIC ---
+        function showAdminApp() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('rulesScreen').style.display = 'none';
+            document.getElementById('adminApp').style.display = 'block';
+            
+            document.getElementById('adminMainTitle').innerText = isOwner ? '👑 Owner Panel' : '🛡️ Moderator Panel';
+            
+            let ownerElements = document.getElementsByClassName('owner-only');
+            for(let i=0; i<ownerElements.length; i++) {
+                ownerElements[i].style.display = isOwner ? 'block' : 'none';
+            }
+
+            db.ref('payments').on('value', (snapshot) => {
+                currentMapCounts = {};
+                snapshot.forEach((child) => {
+                    const pay = child.val();
+                    if (!pay.archived) { 
+                        currentMapCounts[pay.tourney] = (currentMapCounts[pay.tourney] || 0) + 1;
+                    }
+                });
+                renderAdminMaps();
+            });
+            backToAdminMaps(); 
+        }
+
+        function updateNoticeSettings() {
+            const notice = document.getElementById('adminNotice').value;
+            const ytLink = document.getElementById('adminYoutube').value.trim();
+            const wa = document.getElementById('adminWhatsApp').value.trim();
+            const insta = document.getElementById('adminInstagram').value.trim();
+            const upi = document.getElementById('adminUpi').value.trim(); 
+            const rules = document.getElementById('adminRulesText').value.trim(); 
+            const dBonus = document.getElementById('adminDailyBonus').value.trim(); 
+            
+            const appVer = document.getElementById('adminAppVersion').value;
+            const appLink = document.getElementById('adminAppLink').value.trim();
+            
+            const gName = document.getElementById('adminGameName').value.trim() || "FREE FIRE";
+            const gIdLabel = document.getElementById('adminGameIdLabel').value.trim() || "Free Fire UID";
+            
+            const vPrice = document.getElementById('adminVipPrice').value.trim();
+            const vDisc = document.getElementById('adminVipDisc').value.trim();
+            
+            db.ref('settings/vipPrice').set(parseInt(vPrice) || 99);
+            db.ref('settings/vipDiscount').set(parseInt(vDisc) || 10);
+
+            db.ref('settings/gameName').set(gName);
+            db.ref('settings/gameIdLabel').set(gIdLabel);
+            
+            db.ref('settings/appVersion').set(parseInt(appVer) || 1);
+            db.ref('settings/appLink').set(appLink);
+            db.ref('settings/notice').set(notice);
+            db.ref('settings/youtubeLink').set(ytLink); 
+            db.ref('settings/whatsapp').set(wa);
+            db.ref('settings/instagram').set(insta);
+            db.ref('settings/upiId').set(upi);
+            db.ref('settings/rules').set(rules);
+            db.ref('settings/dailyBonus').set(dBonus || 0);
+
+            const apkFile = document.getElementById('adminApkUpload').files[0];
+            if (apkFile) {
+                alert("Naya APK upload ho raha hai... Thoda wait karein.");
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    db.ref('settings/apkData').set(e.target.result).then(() => {
+                        alert("✅ App Settings & New APK Updated Successfully!");
+                        document.getElementById('adminApkUpload').value = '';
+                        document.getElementById('apkUploadText').innerText = '📦 Select New APK File';
+                        document.getElementById('apkUploadText').style.color = '#555';
+                    }).catch(err => {
+                        alert("❌ Error: APK size is too large.");
+                    });
+                };
+                reader.readAsDataURL(apkFile);
+            } else {
+                alert("✅ Settings Updated Successfully!");
+            }
+        }
+
+        function setMinWithdrawal() {
+            let amt = parseInt(document.getElementById('adminMinWithdrawInp').value);
+            if(isNaN(amt) || amt < 0) amt = 0;
+            db.ref('settings/minWithdraw').set(amt).then(() => {
+                alert("✅ Minimum Withdrawal Limit set to ₹" + amt);
+            });
+        }
+
+        function openAdminProfile() {
+            document.getElementById('adminMapsView').style.display = 'none';
+            document.getElementById('adminMapDetailsView').style.display = 'none';
+            document.getElementById('adminWalletRequestsView').style.display = 'none';
+            document.getElementById('adminUsersView').style.display = 'none';
+            
+            if(document.getElementById('adminSupportView')) {
+                document.getElementById('adminSupportView').style.display = 'none';
+            }
+            
+            document.getElementById('adminProfileView').style.display = 'block';
+            
+            document.getElementById('adminNewId').value = adminUid;
+            document.getElementById('adminNewPass').value = adminPass;
+        }
+
+        function updateAdminCredentials() {
+            let newId = document.getElementById('adminNewId').value.trim();
+            let newPass = document.getElementById('adminNewPass').value.trim();
+            
+            if(!newId || !newPass) {
+                alert("ID aur Password dono dalna zaroori hai!");
+                return;
+            }
+
+            db.ref('settings/adminAuth').set({
+                uid: newId,
+                password: newPass
+            }).then(() => {
+                alert("✅ Admin Login ID & Password Safalta se badal gaye!");
+                adminUid = newId;
+                adminPass = newPass;
+                localStorage.setItem('currentUserUid', newId);
+                currentUserUid = newId;
+            });
+        }
+
+        function addSubAdmin() {
+            let nUid = document.getElementById('newSubAdminUid').value.trim();
+            if(!nUid) { 
+                alert("UID enter karein!"); 
+                return; 
+            }
+            if(nUid === adminUid) { 
+                alert("Yeh toh main Owner ka ID hai!"); 
+                return; 
+            }
+            
+            db.ref('sub_admins/' + nUid).set(true).then(() => { 
+                alert(`✅ User ${nUid} ab ek Moderator (Admin) ban gaya hai!`); 
+                document.getElementById('newSubAdminUid').value = ''; 
+            });
+        }
+
+        function removeSubAdmin(sUid) {
+            if(confirm(`Kya aap ${sUid} ko Admin list se hatana chahte hain?`)) { 
+                db.ref('sub_admins/' + sUid).remove().then(() => { 
+                    alert("❌ Admin power removed!"); 
+                }); 
+            }
+        }
+
+        function renderSubAdminsList() {
+            let list = document.getElementById('subAdminList'); 
+            if(!list) return; 
+            
+            list.innerHTML = ''; 
+            let count = 0;
+            
+            for(let uid in subAdminsList) {
+                count++;
+                list.innerHTML += `
+                    <div class="admin-card" style="display:flex; justify-content:space-between; align-items:center; padding:10px;">
+                        <span style="font-weight:bold; color:#333;">🛡️ UID: ${uid}</span>
+                        <button class="danger-btn" style="width:auto; margin:0; padding:5px 10px;" onclick="removeSubAdmin('${uid}')">Remove</button>
+                    </div>`;
+            }
+            
+            if(count === 0) {
+                list.innerHTML = '<p style="color:#888; font-size:12px;">Koi Sub-Admin nahi hai.</p>';
+            }
+        }
+
+        function createNewMap() {
+            const name = document.getElementById('newMapName').value.trim();
+            const icon = document.getElementById('newMapIcon').value.trim() || "🎮";
+            const fee = parseInt(document.getElementById('newMapFee').value);
+            const limit = parseInt(document.getElementById('newMapLimit').value) || 48;
+            const prize = document.getElementById('newMapPrize').value.trim();
+            const time = document.getElementById('newMapTime').value.trim();
+
+            if (!name || isNaN(fee) || !prize || !time) {
+                alert("Kripya Map Name, Fee, Prize aur Time sahi se bharein!");
+                return;
+            }
+
+            db.ref('maps/' + name).once('value').then(snap => {
+                if(snap.exists()) {
+                    alert("Is naam ka map pehle se maujood hai! Koi aur naam dalein.");
+                } else {
+                    db.ref('maps/' + name).set({
+                        icon: icon,
+                        fee: fee,
+                        limit: limit,
+                        prize: prize,
+                        time: time,
+                        available: true
+                    }).then(() => {
+                        alert("✅ Naya Map Successfully Add ho gaya hai!");
+                        document.getElementById('newMapName').value = '';
+                        document.getElementById('newMapIcon').value = '';
+                        document.getElementById('newMapFee').value = '';
+                        document.getElementById('newMapLimit').value = '';
+                        document.getElementById('newMapPrize').value = '';
+                        document.getElementById('newMapTime').value = '';
+                    });
+                }
+            });
+        }
+
+        function deleteEntireMap() {
+            if(confirm(`⚠️ WARNING: Kya aap sach mein "${adminCurrentMap}" ko permanently DELETE karna chahte hain? Iska data wapas nahi aayega!`)) {
+                db.ref('maps/' + adminCurrentMap).remove();
+                db.ref('rooms/' + adminCurrentMap).remove();
+                alert(`✅ ${adminCurrentMap} Map Successfully Deleted!`);
+                backToAdminMaps(); 
+            }
+        }
+
+        function renderAdminMaps() {
+            const container = document.getElementById('adminMapContainer');
+            if (!container || !mapsData) return;
+            
+            container.innerHTML = '';
+            
+            for (const mapName in mapsData) {
+                const m = mapsData[mapName];
+                const count = currentMapCounts[mapName] || 0;
+                const mapLimit = m.limit || 48; 
+                
+                let countColor = count >= mapLimit ? '#e74c3c' : '#3498db';
+                let borderStyle = (m.available === false) ? 'border: 2px solid #e74c3c;' : '';
+
+                container.innerHTML += `
+                    <div class="card" style="${borderStyle}" onclick="openAdminMapDetails('${mapName}')">
+                        <div class="icon">${m.icon}</div>
+                        <span>${mapName}</span>
+                        <div class="sub-text">Fee: ₹${m.fee}<br>Win: ${m.prize}</div>
+                        <div style="font-size:12px; color:${countColor}; font-weight:bold; margin-top:8px; background:#f9f9f9; padding:4px; border-radius:4px; border:1px solid ${countColor};">Players: ${count} / ${mapLimit}</div>
+                    </div>`;
+            }
+        }
+
+        function backToAdminMaps() {
+            document.getElementById('adminMapDetailsView').style.display = 'none';
+            document.getElementById('adminWalletRequestsView').style.display = 'none';
+            document.getElementById('adminUsersView').style.display = 'none';
+            document.getElementById('adminProfileView').style.display = 'none';
+            
+            if(document.getElementById('adminSupportView')) {
+                document.getElementById('adminSupportView').style.display = 'none';
+            }
+            
+            document.getElementById('adminMapsView').style.display = 'block';
+            renderAdminMaps();
+        }
+
+        function openAdminUsersDashboard() {
+            document.getElementById('adminMapsView').style.display = 'none';
+            document.getElementById('adminMapDetailsView').style.display = 'none';
+            document.getElementById('adminWalletRequestsView').style.display = 'none';
+            document.getElementById('adminProfileView').style.display = 'none';
+            
+            if(document.getElementById('adminSupportView')) {
+                document.getElementById('adminSupportView').style.display = 'none';
+            }
+            
+            document.getElementById('adminUsersView').style.display = 'block';
+
+            const list = document.getElementById('adminAllUsersList');
+            list.innerHTML = 'Loading users...';
+
+            db.ref('users').on('value', snap => {
+                allUsersData = [];
+                snap.forEach(child => {
+                    let u = child.val();
+                    u.uid = child.key;
+                    if(u.uid !== adminUid) {
+                        allUsersData.push(u);
+                    }
+                });
+                renderAdminUsers();
+            });
+        }
+
+        function renderAdminUsers(filterText = "") {
+            const list = document.getElementById('adminAllUsersList');
+            list.innerHTML = '';
+            
+            let filtered = allUsersData.filter(u => 
+                (u.name && u.name.toLowerCase().includes(filterText.toLowerCase())) || 
+                (u.uid && u.uid.toLowerCase().includes(filterText.toLowerCase()))
+            );
+
+            if(filtered.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#888;">No users found.</p>';
+                return;
+            }
+
+            filtered.forEach(u => {
+                let actionButtons = "";
+                
+                if(isOwner) {
+                    let banBtn = u.banned 
+                        ? `<button class="primary-btn" style="background:#2ecc71; color:white; flex:1; padding:10px; margin:0;" onclick="openUserActionPopup('unban', '${u.uid}')">✅ UNBAN</button>`
+                        : `<button class="primary-btn" style="background:#e74c3c; color:white; flex:1; padding:10px; margin:0;" onclick="openUserActionPopup('ban', '${u.uid}')">🚫 BAN</button>`;
+
+                    let deleteBtn = `<button class="danger-btn" style="flex:1; margin:0; padding:10px;" onclick="openUserActionPopup('delete', '${u.uid}')">🗑️ DELETE</button>`;
+
+                    let verifyBtn = u.isVIP
+                        ? `<button class="primary-btn" style="background:#f39c12; color:white; width:100%; margin-top:10px; padding:10px;" onclick="toggleVIP('${u.uid}', false)">❌ REMOVE T-BADGE</button>`
+                        : `<button class="primary-btn" style="background:#8e44ad; color:white; width:100%; margin-top:10px; padding:10px;" onclick="toggleVIP('${u.uid}', true)">🏅 GIVE T-BADGE (FREE)</button>`;
+                        
+                    actionButtons = `
+                        <p style="font-size:11px; font-weight:bold; color:#555; margin-bottom:5px;">User Actions (Owner Only):</p>
+                        <div style="display:flex; justify-content:space-between; gap:10px;">
+                            ${banBtn}
+                            ${deleteBtn}
+                        </div>
+                        ${verifyBtn}
+                    `;
+                }
+
+                let statusHtml = u.banned ? `<span style="color:#e74c3c; font-weight:bold; font-size:12px;">[BANNED]</span>` : "";
+                let vipStar = u.isVIP ? ` <span class="t-badge" title="Tournament Pro VIP">T</span>` : "";
+
+                list.innerHTML += `
+                    <div class="admin-card" style="margin-bottom: 10px; ${u.banned ? 'border-left: 5px solid #e74c3c;' : 'border-left: 5px solid #3498db;'}">
+                        <div onclick="toggleUserControls('${u.uid}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <h4 style="color:#333; margin-bottom:2px;">👤 ${u.name} ${vipStar} ${statusHtml}</h4>
+                                <p style="font-size:11px; color:#666;">UID: ${u.uid} | Bal: ₹${u.balance || 0} | Won: ₹${u.totalWon || 0}</p>
+                            </div>
+                            <span style="color:#888; font-size: 12px;">Options ▼</span>
+                        </div>
+                        
+                        <div id="controls_${u.uid}" style="display:none; margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
+                            <p style="font-size:11px; font-weight:bold; color:#555; margin-bottom:5px;">Send / Return Balance:</p>
+                            <div style="display:flex; gap:5px; margin-bottom:15px;">
+                                <input type="number" id="amt_${u.uid}" placeholder="Amount (₹)" style="margin:0; width:40%;">
+                                <button class="primary-btn" style="margin:0; width:30%; background:#f1c40f; padding:10px;" onclick="sendPrizeMoney('${u.uid}')">🎁 SEND</button>
+                                <button class="primary-btn" style="margin:0; width:30%; background:#e67e22; color:white; padding:10px;" onclick="returnPayment('${u.uid}')">↩️ TAKE</button>
+                            </div>
+                            ${actionButtons}
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function toggleVIP(uid, status) {
+            let actionText = status ? "T-Badge dena" : "T-Badge hatana";
+            if(confirm(`Kya aap sach mein is user ko ${actionText} chahte hain?`)) {
+                db.ref('users/' + uid + '/isVIP').set(status).then(() => {
+                    alert(status ? "✅ Player ko free T-Badge mil gaya!" : "❌ T-Badge hata diya gaya!");
+                });
+            }
+        }
+
+        function filterUsers() {
+            let txt = document.getElementById('userSearchInput').value;
+            renderAdminUsers(txt);
+        }
+
+        function toggleUserControls(uid) {
+            let div = document.getElementById('controls_' + uid);
+            div.style.display = div.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function sendPrizeMoney(uid) {
+            let amt = parseInt(document.getElementById('amt_' + uid).value);
+            if(!amt || amt <= 0) { 
+                alert("Enter valid amount!"); 
+                return; 
+            }
+            
+            db.ref('users/' + uid).once('value').then(snap => {
+                let uData = snap.val() || {};
+                let currentBal = uData.balance || 0;
+                let currentWon = uData.totalWon || 0;
+                
+                db.ref('users/' + uid).update({
+                    balance: currentBal + amt,
+                    totalWon: currentWon + amt
+                }).then(() => {
+                    alert(`✅ ₹${amt} prize sent successfully!`);
+                    document.getElementById('amt_' + uid).value = '';
+                });
+            });
+        }
+
+        function returnPayment(uid) {
+            let amt = parseInt(document.getElementById('amt_' + uid).value);
+            if(!amt || amt <= 0) { 
+                alert("Enter valid amount to return!"); 
+                return; 
+            }
+            
+            db.ref('users/' + uid).once('value').then(snap => {
+                let uData = snap.val() || {};
+                let currentBal = uData.balance || 0;
+                let currentWon = uData.totalWon || 0;
+                
+                let newBal = currentBal - amt;
+                if(newBal < 0) newBal = 0; 
+                
+                let newWon = currentWon - amt;
+                if(newWon < 0) newWon = 0;
+                
+                db.ref('users/' + uid).update({
+                    balance: newBal,
+                    totalWon: newWon
+                }).then(() => {
+                    alert(`✅ ₹${amt} successfully taken back from user!`);
+                    document.getElementById('amt_' + uid).value = '';
+                });
+            });
+        }
+
+        function openAdminMapDetails(mapName) {
+            adminCurrentMap = mapName;
+            document.getElementById('adminMapsView').style.display = 'none';
+            document.getElementById('adminMapDetailsView').style.display = 'block';
+            document.getElementById('adminMapTitle').innerText = mapName + " Control";
+
+            document.getElementById('adminSetMapName').value = mapName;
+
+            db.ref('maps/' + mapName).once('value').then((snap) => {
+                const mData = snap.val();
+                if(mData){
+                    document.getElementById('adminSetFee').value = mData.fee;
+                    document.getElementById('adminSetPrize').value = mData.prize;
+                    document.getElementById('adminSetTime').value = mData.time;
+                    document.getElementById('adminSetLimit').value = mData.limit || 48;
+                }
+            });
+            
+            db.ref('rooms/' + mapName).once('value').then((snap) => {
+                const rData = snap.val();
+                document.getElementById('adminSetRoomId').value = rData ? rData.rId : '';
+                document.getElementById('adminSetRoomPass').value = rData ? rData.rPass : '';
+            });
+
+            const pList = document.getElementById('adminPlayerList');
+            db.ref('payments').orderByChild('tourney').equalTo(mapName).on('value', (snapshot) => {
+                pList.innerHTML = '';
+                let count = 0;
+                snapshot.forEach((child) => {
+                    const pay = child.val();
+                    if (!pay.archived) {
+                        count++;
+                        pList.innerHTML += `
+                            <div class="admin-card" style="padding: 10px;">
+                                <p style="font-weight:bold; color:#333;">👤 ${pay.name} (UID: ${pay.uid})</p>
+                                <p style="font-size:12px; color:#555;">Code: <strong style="color:#d35400">${pay.code}</strong> | Paid: ₹${pay.fee}</p>
+                            </div>`;
+                    }
+                });
+                if(count === 0) {
+                    pList.innerHTML = '<p style="text-align:center; color:#888;">No active players.</p>';
+                }
+            });
+        }
+
+        function setMapAvailability(isAvail) {
+            db.ref('maps/' + adminCurrentMap).update({ available: isAvail }).then(() => {
+                alert(isAvail ? "✅ Map is now OPEN for players!" : "❌ Map is now CLOSED!");
+            });
+        }
+
+        function updateMapDetails() {
+            const newName = document.getElementById('adminSetMapName').value.trim();
+            const fee = parseInt(document.getElementById('adminSetFee').value);
+            const prize = document.getElementById('adminSetPrize').value.trim();
+            const time = document.getElementById('adminSetTime').value.trim();
+            const limit = parseInt(document.getElementById('adminSetLimit').value); 
+
+            if(!newName || !fee || !prize || !time || !limit) { 
+                alert("Pehle saari details sahi se bharein!"); 
+                return; 
+            }
+
+            if (newName !== adminCurrentMap) {
+                db.ref('maps/' + adminCurrentMap).once('value').then(snap => {
+                    let currentData = snap.val();
+                    currentData.fee = fee;
+                    currentData.prize = prize;
+                    currentData.time = time;
+                    currentData.limit = limit; 
+
+                    db.ref('maps/' + newName).set(currentData).then(() => {
+                        db.ref('maps/' + adminCurrentMap).remove();
+
+                        db.ref('rooms/' + adminCurrentMap).once('value').then(roomSnap => {
+                            let rData = roomSnap.val();
+                            if(rData) {
+                                db.ref('rooms/' + newName).set(rData);
+                                db.ref('rooms/' + adminCurrentMap).remove();
+                            }
+                        });
+
+                        db.ref('payments').orderByChild('tourney').equalTo(adminCurrentMap).once('value').then(paySnap => {
+                            let updates = {};
+                            paySnap.forEach(child => {
+                                if(!child.val().archived) { 
+                                    updates[child.key + '/tourney'] = newName;
+                                }
+                            });
+                            if(Object.keys(updates).length > 0) {
+                                db.ref('payments').update(updates);
+                            }
+                        });
+
+                        alert("✅ Map Name & Settings Updated!");
+                        adminCurrentMap = newName; 
+                        document.getElementById('adminMapTitle').innerText = newName + " Control";
+                    });
+                });
+            } else {
+                db.ref('maps/' + adminCurrentMap).update({ fee: fee, prize: prize, time: time, limit: limit }).then(() => {
+                    alert("✅ Map settings live updated!");
+                });
+            }
+        }
+
+        function uploadRoomDetails() {
+            const rId = document.getElementById('adminSetRoomId').value.trim();
+            const rPass = document.getElementById('adminSetRoomPass').value.trim();
+            
+            if (!rId || !rPass) { 
+                alert("Enter ID and Pass!"); 
+                return; 
+            }
+            
+            db.ref('rooms/' + adminCurrentMap).set({ 
+                rId: rId, 
+                rPass: rPass 
+            }).then(() => {
+                alert("Room ID/Pass live ho gaya!");
+            });
+        }
+
+        function resetMapData() {
+            document.getElementById('resetMapNameText').innerText = adminCurrentMap;
+            document.getElementById('resetConfirmOverlay').style.display = 'flex';
+        }
+
+        function closeResetPopup() {
+            document.getElementById('resetConfirmOverlay').style.display = 'none';
+        }
+
+        function confirmResetMapData() {
+            closeResetPopup();
+            
+            db.ref('rooms/' + adminCurrentMap).remove();
+
+            db.ref('payments').orderByChild('tourney').equalTo(adminCurrentMap).once('value').then((snapshot) => {
+                const updates = {};
+                snapshot.forEach((child) => {
+                    updates[child.key + '/archived'] = true;
+                    updates[child.key + '/status'] = 'completed'; 
+                });
+                return db.ref('payments').update(updates);
+            }).then(() => {
+                document.getElementById('adminSetRoomId').value = '';
+                document.getElementById('adminSetRoomPass').value = '';
+                alert(`✅ Match Finished!`);
+            }).catch(err => {
+                alert("Error: " + err.message);
+            });
+        }
+
+        function saveAdminQR() {
+            const fileInput = document.getElementById('adminQrUpload');
+            if (fileInput.files.length === 0) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                db.ref('settings/qrCode').set(event.target.result).then(() => { 
+                    alert("QR Updated!"); 
+                });
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        }
+
+        function openAdminWalletRequests(typeFilter) {
+            document.getElementById('adminMapsView').style.display = 'none';
+            document.getElementById('adminMapDetailsView').style.display = 'none';
+            document.getElementById('adminUsersView').style.display = 'none';
+            document.getElementById('adminProfileView').style.display = 'none';
+            
+            if(document.getElementById('adminSupportView')) {
+                document.getElementById('adminSupportView').style.display = 'none';
+            }
+            
+            document.getElementById('adminWalletRequestsView').style.display = 'block';
+            document.getElementById('adminWalletTitle').innerText = typeFilter === 'add' ? "Add Requests" : "Withdrawals";
+
+            if(typeFilter === 'withdraw') {
+                document.getElementById('adminWithdrawLimitBox').style.display = 'block';
+            } else {
+                document.getElementById('adminWithdrawLimitBox').style.display = 'none';
+            }
+
+            const reqList = document.getElementById('adminWalletList');
+            db.ref('wallet_requests').on('value', (snapshot) => {
+                reqList.innerHTML = '';
+                let hasPending = false;
+                const requests = [];
+                
+                snapshot.forEach(child => { 
+                    let r = child.val(); 
+                    r.key = child.key; 
+                    requests.push(r); 
+                });
+
+                requests.reverse().forEach(req => {
+                    if(req.status === 'pending' && req.type === typeFilter) {
+                        hasPending = true;
+                        if (typeFilter === 'add') {
+                            reqList.innerHTML += `
+                                <div class="admin-card">
+                                    <h4>👤 ${req.name}</h4>
+                                    <p style="color:#1abc9c; font-weight:bold; font-size:18px; margin:5px 0;">Request: ₹${req.amount}</p>
+                                    <img src="${req.image}" style="width:100%; height:200px; object-fit:contain; background:#eee; margin:10px 0; border-radius:5px;">
+                                    
+                                    <p style="font-size:12px; font-weight:bold; color:#555;">Approve Amount (₹):</p>
+                                    <input type="number" id="approveAmt_${req.key}" value="${req.amount}" style="padding:10px; margin-bottom:10px;">
+                                    
+                                    <button class="success-btn" onclick="approveWalletAdd('${req.key}', '${req.uid}')">✅ Approve</button>
+                                    <button class="danger-btn" onclick="rejectWalletReq('${req.key}', 'add', '${req.uid}', ${req.amount})">❌ Reject</button>
+                                </div>`;
+                        } else {
+                            reqList.innerHTML += `
+                                <div class="admin-card" style="border-left-color: #e74c3c;">
+                                    <h4>👤 ${req.name}</h4>
+                                    <p>Wants: ₹${req.amount}</p>
+                                    <p>UPI: ${req.upi}</p>
+                                    ${req.withdrawQr ? `<img src="${req.withdrawQr}" style="width:100%; height:200px; object-fit:contain; background:#eee;">` : ''}
+                                    <button class="success-btn" style="width:100%; margin-top:10px;" onclick="approveWalletWithdraw('${req.key}')">✅ Paid</button>
+                                    <button class="danger-btn" style="width:100%; margin-top:5px;" onclick="rejectWalletReq('${req.key}', 'withdraw', '${req.uid}', ${req.amount})">❌ Reject & Refund</button>
+                                </div>`;
+                        }
+                    }
+                });
+                
+                if(!hasPending) {
+                    reqList.innerHTML = '<p style="text-align:center;">No pending requests.</p>';
+                }
+            });
+        }
+
+        function approveWalletAdd(reqKey, uid) {
+            const actualAmt = parseInt(document.getElementById('approveAmt_' + reqKey).value);
+            if (!actualAmt || actualAmt <= 0) { 
+                alert("Enter a valid amount!"); 
+                return; 
+            }
+
+            db.ref('wallet_requests/' + reqKey).update({ 
+                status: 'approved', 
+                amount: actualAmt 
+            });
+            
+            const userRef = db.ref('users/' + uid + '/balance');
+            userRef.once('value').then(snap => {
+                let currentBal = snap.val() || 0;
+                userRef.set(currentBal + actualAmt);
+                alert(`✅ ₹${actualAmt} added to UID ${uid} successfully!`);
+            });
+        }
+
+        function approveWalletWithdraw(reqKey) {
+            db.ref('wallet_requests/' + reqKey).update({ 
+                status: 'approved' 
+            }).then(() => {
+                alert("Withdrawal marked as successful!");
+            });
+        }
+
+        function rejectWalletReq(reqKey, type, uid, amount) {
+            let reason = prompt("Reject karne ka reason likhein (Player ko yahi dikhega):", "Amount galat hai ya Fake screenshot");
+            if (reason === null) return;
+
+            let updates = { 
+                status: 'rejected', 
+                rejectReason: reason || "Invalid Request" 
+            };
+
+            db.ref('wallet_requests/' + reqKey).update(updates).then(() => {
+                if (type === 'withdraw') {
+                    const userRef = db.ref('users/' + uid + '/balance');
+                    userRef.once('value').then(snap => {
+                        let currentBal = snap.val() || 0;
+                        userRef.set(currentBal + amount);
+                    });
+                    alert("Request Rejected aur Paise Refund ho gaye!");
+                } else {
+                    alert("Request Rejected!");
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>
